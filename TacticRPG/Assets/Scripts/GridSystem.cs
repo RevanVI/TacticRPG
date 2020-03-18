@@ -96,18 +96,11 @@ public class GridSystem : MonoBehaviour
     */
     public void PrintTileInfo(Vector3Int cellPosition)
     {
-        TileBase tile = CurrentTilemap.GetTile(cellPosition);
-        //RoadTile roadTile = tile as RoadTile;
+        BattleTile tile = CurrentTilemap.GetTile(cellPosition) as BattleTile;
         if (tile != null)
-            Debug.Log($"Tile at position ({cellPosition.x}, {cellPosition.y}) exists");
+            Debug.Log($"Tile at position ({cellPosition.x}, {cellPosition.y}) exists\n Is blocked: {tile.IsBlocked}");
         else
             Debug.Log($"Tile at position ({cellPosition.x}, {cellPosition.y}) does not exist");
-        //if (roadTile != null)
-        //1    Debug.Log($"This tile is RoadTile and isBlock = {roadTile.isBlock}");
-        if (tile is Tile)
-        {
-            Tile tTile = tile as Tile;
-        }
     }
 
     public Vector3Int GetTilemapCoordsFromWorld(Tilemap tilemap, Vector3 worldCoords)

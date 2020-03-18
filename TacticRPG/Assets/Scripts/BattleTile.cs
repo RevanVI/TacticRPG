@@ -8,6 +8,8 @@ public class BattleTile : Tile
 {
     public bool IsBlocked;
 
+    
+
 #if UNITY_EDITOR
     
 #endif
