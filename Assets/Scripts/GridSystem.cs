@@ -18,6 +18,7 @@ public class GridSystem : MonoBehaviour
     //public RoadTile CommonTile;
 
     private List<Vector3Int> _moveMap;
+
     private void Awake()
     {
         if (Instance != null)
@@ -48,40 +49,45 @@ public class GridSystem : MonoBehaviour
         }
     }
 
-    /*
     public List<Vector3Int> GetMoveMap(int moveDistance, Vector3Int position)
     {
         List<Vector3Int> map = new List<Vector3Int>();
         Vector3Int curPosition = position;
+        List<Node> nodesToProcess = new List<Node>();
 
-        for (int rotation = 0; rotation < 4; ++rotation)
+        Node currentNode = _graph.NodeGraph[_graph.CreateNodeKeyFromCoordinates(position.x, position.y)];
+        currentNode.ProcessValue = moveDistance;
+        currentNode.ProcessStatus = Node.NodeProcessStatus.InOpenList;
+        nodesToProcess.Add(currentNode);
+
+        while(nodesToProcess.Count != 0)
         {
-            Vector3Int moveVector;
-            TileBase tile;
-            if (rotation == 0)
-                moveVector = new Vector3Int(0, 1, 0);
-            else if (rotation == 1)
-                moveVector = new Vector3Int(1, 0, 0);
-            else if (rotation == 2)
-                moveVector = new Vector3Int(0, -1, 0);
-            else
-                moveVector = new Vector3Int(-1, 0, 0);
-            for (int step = 1; step <= moveDistance; ++step)
+            currentNode = nodesToProcess[0];
+            foreach(var connection in currentNode.Connections)
             {
-                curPosition += moveVector;
-                tile = CurrentTilemap.GetTile(curPosition);
-                if (tile is RoadTile)
+                Node endNode = connection.EndNode;
+                if (endNode.ProcessStatus == Node.NodeProcessStatus.NotVisited ||
+                    endNode.ProcessValue < currentNode.ProcessValue - 1)
                 {
-                    RoadTile roadTile = tile as RoadTile;
-                    if (roadTile.isBlock)
-                        break;
-                    if (roadTile.isTaken)
-                        break;
+                    endNode.ProcessValue = currentNode.ProcessValue - 1;
+
+                    //if node is waiting processing then change order
+                    if (endNode.ProcessStatus == Node.NodeProcessStatus.InOpenList)
+                    {
+                        nodesToProcess.Remove(endNode);
+                    }
+
+                    int indexToInsert = nodesToProcess.FindLastIndex(delegate(Node node)
+                                                {
+                                                    return node.ProcessValue >= endNode.ProcessValue;
+                                                });
+                    nodesToProcess.Insert(indexToInsert, endNode);
+                    endNode.ProcessStatus = Node.NodeProcessStatus.InOpenList;
                 }
-                map.Add(curPosition);
             }
-            curPosition = position;
+            nodesToProcess.Remove(currentNode);
         }
+
         return map;
     }
 
@@ -93,7 +99,6 @@ public class GridSystem : MonoBehaviour
             Movemap.SetTile(tilePosition, MoveTile);
         }
     }
-    */
 
     public void InitializeGraph()
     {

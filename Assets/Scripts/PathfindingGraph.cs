@@ -4,14 +4,11 @@ using UnityEngine;
 
 public class Node
 {
+    int[] Coords = new int[2];
     public List<Connection> Connections = new List<Connection>();
 
     /*
      * gameplay status of tile
-     * 0 - tile is empty
-     * 1 - tile is block
-     * 2 - tile is taken by character
-     * 
      */
     public enum TileGameStatus
     {
@@ -23,11 +20,17 @@ public class Node
 
     /*
      * Status of node in pathfinding process
-     * 0 - not visited
-     * 1 - in open list
-     * 2 - in closed list
      */
-    public int ProcessStatus;
+    public enum NodeProcessStatus
+    {
+        NotVisited = 0,
+        InOpenList = 1,
+        InClosedList = 2,
+    }
+    public NodeProcessStatus ProcessStatus;
+    // using in move map building to store the minimum step value
+    public int ProcessValue;
+
 
     public float CostSoFar;
 
