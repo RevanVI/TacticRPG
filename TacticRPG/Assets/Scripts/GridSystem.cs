@@ -12,6 +12,8 @@ public class GridSystem : MonoBehaviour
     public Camera CurrentCamera;
     public Tile MoveTile;
 
+    PathfindingGraph _graph;
+
     //public RoadTile TakenTile;
     //public RoadTile CommonTile;
 
@@ -26,6 +28,7 @@ public class GridSystem : MonoBehaviour
         {
             Instance = this;
         }
+        InitializeGraph();
     }
 
     private void Start()
@@ -41,10 +44,7 @@ public class GridSystem : MonoBehaviour
         if (Input.GetMouseButtonDown(0))
         {
             Vector3Int cellPosition = GetTilemapCoordsFromScreen(GridSystem.Instance.CurrentTilemap, Input.mousePosition);
-            //TileBase tile = CurrentTilemap.GetTile(cellPosition);
             PrintTileInfo(cellPosition);
-            //Debug.Log($"tile at position ({cellPosition.x}, {cellPosition.y}) is {tile != null}");
-            //Debug.Log($"Tile at position ({cellPosition.x}, {cellPosition.y}) is RoadTile: {tile is RoadTile}");
         }
     }
 
@@ -94,11 +94,78 @@ public class GridSystem : MonoBehaviour
         }
     }
     */
+
+    public void InitializeGraph()
+    {
+        _graph = new PathfindingGraph();
+        CurrentTilemap.CompressBounds();
+        foreach(Vector3Int pos in CurrentTilemap.cellBounds.allPositionsWithin)
+        {
+            BattleTile tile = CurrentTilemap.GetTile<BattleTile>(pos);
+            if (tile != null)
+            {
+                Node centralTileNode;
+                string nodeKey = _graph.CreateNodeKeyFromCoordinates(pos.x, pos.y);
+                if (_graph.NodeGraph.ContainsKey(nodeKey))
+                {
+                    centralTileNode = _graph.NodeGraph[nodeKey];
+                }
+                else
+                {
+                    centralTileNode = new Node();
+                    if (tile.IsBlocked)
+                        centralTileNode.GameStatus = Node.TileGameStatus.Block;
+                    else
+                        centralTileNode.GameStatus = Node.TileGameStatus.Empty;
+                    _graph.NodeGraph.Add(nodeKey, centralTileNode);
+                }
+
+                //adding connections
+                if (centralTileNode.GameStatus == Node.TileGameStatus.Empty)
+                {
+                    Vector3Int[] offsets = { new Vector3Int(1, 0, 0), new Vector3Int(-1, 0, 0), new Vector3Int(0, 1, 0), new Vector3Int(0, -1, 0) };
+                    for (int i = 0; i < 4; ++i)
+                    {
+                        Vector3Int currentTileLocation = pos + offsets[i];
+                        BattleTile offsetTile = CurrentTilemap.GetTile<BattleTile>(currentTileLocation);
+                        if (offsetTile != null)
+                        {
+                            Node offsetTileNode;
+                            string offsetNodeKey = _graph.CreateNodeKeyFromCoordinates(currentTileLocation.x, currentTileLocation.y);
+                            if (_graph.NodeGraph.ContainsKey(offsetNodeKey))
+                            {
+                                offsetTileNode = _graph.NodeGraph[offsetNodeKey];
+                            }
+                            else
+                            {
+                                offsetTileNode = new Node();
+                                if (tile.IsBlocked)
+                                    offsetTileNode.GameStatus = Node.TileGameStatus.Block;
+                                else
+                                    offsetTileNode.GameStatus = Node.TileGameStatus.Empty;
+                                _graph.NodeGraph.Add(offsetNodeKey, offsetTileNode);
+                            }
+
+                            if (offsetTileNode.GameStatus == Node.TileGameStatus.Empty)
+                            {
+                                centralTileNode.AddConnection(1f, centralTileNode, offsetTileNode);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     public void PrintTileInfo(Vector3Int cellPosition)
     {
         BattleTile tile = CurrentTilemap.GetTile(cellPosition) as BattleTile;
         if (tile != null)
+        {
             Debug.Log($"Tile at position ({cellPosition.x}, {cellPosition.y}) exists\n Is blocked: {tile.IsBlocked}");
+            Node node = _graph.NodeGraph[_graph.CreateNodeKeyFromCoordinates(cellPosition.x, cellPosition.y)];
+            Debug.Log($"Connections count: {node.Connections.Count}");
+        }
         else
             Debug.Log($"Tile at position ({cellPosition.x}, {cellPosition.y}) does not exist");
     }
@@ -114,6 +181,7 @@ public class GridSystem : MonoBehaviour
         Vector3 worldPosition = ray.GetPoint(-ray.origin.z / ray.direction.z);
         return tilemap.WorldToCell(worldPosition);
     }
+    
     /*
     public void PrintCharacterMoveMap(Character character)
     {
@@ -121,6 +189,7 @@ public class GridSystem : MonoBehaviour
         PrintMoveMap(character.Length, character.Coords);
     }
     */
+
     public bool IsMovementEnable(Vector3Int targetPosition)
     {
         if (_moveMap.IndexOf(targetPosition) != -1)
@@ -153,4 +222,5 @@ public class GridSystem : MonoBehaviour
         return 0;
     }
     */
+
 }
