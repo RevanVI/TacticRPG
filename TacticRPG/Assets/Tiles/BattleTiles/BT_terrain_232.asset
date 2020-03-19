@@ -12,7 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3d8efcbdf86744541ba3eac51f037941, type: 3}
   m_Name: BT_terrain_232
   m_EditorClassIdentifier: 
-  m_Sprite: {fileID: 0}
+  m_Sprite: {fileID: 6409872252558034439, guid: bc54fda990c72004e9557f56e241aeec,
+    type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Transform:
     e00: 1
