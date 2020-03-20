@@ -33,6 +33,7 @@ public class Node
 
 
     public float CostSoFar;
+    public float EstimatedCost;
 
     public bool AddConnection(Connection connection)
     {
@@ -114,5 +115,68 @@ public class PathfindingGraph
             node.ProcessStatus = Node.NodeProcessStatus.NotVisited;
             node.ProcessValue = 0;
         }
+    }
+
+    public List<Node> AStarPathfinding(Node start, Node end)
+    {
+        List<Node> openList = new List<Node>();
+        start.CostSoFar = 0;
+        start.EstimatedCost = Euristic();
+
+        openList.Add(start);
+
+        while (openList.Count != 0)
+        {
+            Node currentNode = openList[0];
+
+            //find node with smallest estimated cost in open list
+            foreach(var node in openList)
+            {
+                if (node.EstimatedCost < currentNode.EstimatedCost)
+                    currentNode = node;
+            }
+
+            //if reach goal - stop searching and start build path
+            if (currentNode == end)
+                break;
+
+            foreach(var connection in currentNode.Connections)
+            {
+                Node endNode = connection.EndNode;
+                float cost = currentNode.CostSoFar + connection.Cost;
+                float heuristic;
+
+                if (endNode.ProcessStatus == Node.NodeProcessStatus.InClosedList)
+                {
+                    if (endNode.CostSoFar < cost)
+                        continue;
+                    heuristic = endNode.EstimatedCost - endNode.CostSoFar;
+                }
+                else if (endNode.ProcessStatus == Node.NodeProcessStatus.InOpenList)
+                {
+                    if (endNode.CostSoFar < cost)
+                        continue;
+                    heuristic = endNode.EstimatedCost - endNode.CostSoFar;
+
+                }
+                else
+                    heuristic = Euristic();
+
+                //connection
+                endNode.EstimatedCost = cost + heuristic;
+                if (endNode.ProcessStatus != Node.NodeProcessStatus.InOpenList)
+                {
+                    endNode.ProcessStatus = Node.NodeProcessStatus.InOpenList;
+                    openList.Add(endNode);
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public float Euristic()
+    {
+        return 0;
     }
 }

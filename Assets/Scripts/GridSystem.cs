@@ -30,6 +30,7 @@ public class GridSystem : MonoBehaviour
             Instance = this;
         }
         InitializeGraph();
+        _graph.RestoreProcessStatus();
     }
 
     private void Start()
@@ -42,14 +43,16 @@ public class GridSystem : MonoBehaviour
 
     private void Update()
     {
+        /*
         if (Input.GetMouseButtonDown(0))
         {
-            Movemap.ClearAllTiles();
-            _graph.RestoreProcessStatus();
+            //Movemap.ClearAllTiles();
+            //_graph.RestoreProcessStatus();
             Vector3Int cellPosition = GetTilemapCoordsFromScreen(GridSystem.Instance.CurrentTilemap, Input.mousePosition);
             PrintTileInfo(cellPosition);
-            PrintMoveMap(3, cellPosition);
+            //PrintMoveMap(3, cellPosition);
         }
+        */
     }
 
     public List<Vector3Int> GetMoveMap(int moveDistance, Vector3Int position)
@@ -111,8 +114,7 @@ public class GridSystem : MonoBehaviour
 
     private void PrintMoveMap(int moveDistance, Vector3Int position)
     {
-        List<Vector3Int> mapToPaint = GetMoveMap(moveDistance, position);
-        foreach (var tilePosition in mapToPaint)
+        foreach (var tilePosition in _moveMap)
         {
             Movemap.SetTile(tilePosition, MoveTile);
         }
@@ -127,12 +129,6 @@ public class GridSystem : MonoBehaviour
             BattleTile tile = CurrentTilemap.GetTile<BattleTile>(pos);
             if (tile != null)
             {
-                //for debug
-                if (tile.IsBlocked)
-                {
-                    int x = 2 + 2;
-                }
-                //
                 Node centralTileNode;
                 string nodeKey = _graph.CreateNodeKeyFromCoordinates(pos.x, pos.y);
                 if (_graph.NodeGraph.ContainsKey(nodeKey))
@@ -143,6 +139,7 @@ public class GridSystem : MonoBehaviour
                 {
                     centralTileNode = new Node();
                     centralTileNode.Coords = pos;
+                    centralTileNode.ProcessStatus = Node.NodeProcessStatus.NotVisited;
                     if (tile.IsBlocked)
                         centralTileNode.GameStatus = Node.TileGameStatus.Block;
                     else
@@ -170,6 +167,7 @@ public class GridSystem : MonoBehaviour
                             {
                                 offsetTileNode = new Node();
                                 offsetTileNode.Coords = currentTileLocation;
+                                offsetTileNode.ProcessStatus = Node.NodeProcessStatus.NotVisited;
                                 if (offsetTile.IsBlocked)
                                     offsetTileNode.GameStatus = Node.TileGameStatus.Block;
                                 else
@@ -196,6 +194,12 @@ public class GridSystem : MonoBehaviour
             Debug.Log($"Tile at position ({cellPosition.x}, {cellPosition.y}) exists\n Is blocked: {tile.IsBlocked}");
             Node node = _graph.NodeGraph[_graph.CreateNodeKeyFromCoordinates(cellPosition.x, cellPosition.y)];
             Debug.Log($"Connections count: {node.Connections.Count}");
+            if (node.ProcessStatus == Node.NodeProcessStatus.InClosedList)
+                Debug.Log($"In closed list");
+            else if (node.ProcessStatus == Node.NodeProcessStatus.InOpenList)
+                Debug.Log($"In open list");
+            else if (node.ProcessStatus == Node.NodeProcessStatus.NotVisited)
+                Debug.Log($"Not visited");
         }
         else
             Debug.Log($"Tile at position ({cellPosition.x}, {cellPosition.y}) does not exist");
@@ -213,19 +217,31 @@ public class GridSystem : MonoBehaviour
         return tilemap.WorldToCell(worldPosition);
     }
     
-    /*
     public void PrintCharacterMoveMap(Character character)
     {
         _moveMap = GetMoveMap(character.Length, character.Coords);
         PrintMoveMap(character.Length, character.Coords);
     }
-    */
 
     public bool IsMovementEnable(Vector3Int targetPosition)
     {
         if (_moveMap.IndexOf(targetPosition) != -1)
             return true;
         return false;
+    }
+
+    public void ResetMovemap()
+    {
+        _moveMap.Clear();
+        Movemap.ClearAllTiles();
+        _graph.RestoreProcessStatus();
+    }
+
+    public void DefineCharacterCoords(Character character)
+    {
+        character.Coords = GetTilemapCoordsFromWorld(CurrentTilemap, character.transform.position);
+        Node node = _graph.NodeGraph[_graph.CreateNodeKeyFromCoordinates(character.Coords.x, character.Coords.y)];
+        node.GameStatus = Node.TileGameStatus.Taken;
     }
 
     /*

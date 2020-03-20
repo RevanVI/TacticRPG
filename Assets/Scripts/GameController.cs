@@ -7,17 +7,20 @@ public enum GameState
     Start,
     PlayerTurn,
     EnemyTurn,
-    Endgame
+    EndBattle
 };
 
 public class GameController : MonoBehaviour
 {
-    /*
     public static GameController Instance;
     public GridSystem Grid;
     public GameState State;
+    private bool _isUpdateStarted;
 
-    public PlayerController PlayerCharacter;
+    public PlayerController PlayerController;
+    public List<Character> TurnQueue;
+
+    public List<Character> CharacterList;
     public EnemyController[] Enemies;
 
     private bool _isInputBlocked;
@@ -26,6 +29,9 @@ public class GameController : MonoBehaviour
     {
         if (Instance == null)
             Instance = this;
+
+        TurnQueue = new List<Character>();
+        CharacterList = new List<Character>();
     }
 
     // Start is called before the first frame update
@@ -34,38 +40,87 @@ public class GameController : MonoBehaviour
         _isInputBlocked = true;
         State = GameState.Start;
 
-        //new WaitForSeconds(2f);
-
-        StartPlayerTurn();
+        _isUpdateStarted = false;
+        StartCoroutine(WaitStartGame());
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetMouseButtonDown(0) && State == GameState.PlayerTurn && !_isInputBlocked)
+        _isUpdateStarted = true;
+        if (Input.GetMouseButtonDown(0))
         {
-            _isInputBlocked = true;
             Vector3Int cellPosition = GridSystem.Instance.GetTilemapCoordsFromScreen(GridSystem.Instance.CurrentTilemap, Input.mousePosition);
-            bool isMovementEnable = GridSystem.Instance.IsMovementEnable(cellPosition);
-            if (isMovementEnable)
+            GridSystem.Instance.PrintTileInfo(cellPosition);
+
+            if (State == GameState.PlayerTurn && !_isInputBlocked)
             {
-                GridSystem.Instance.Movemap.ClearAllTiles();
-                PlayerCharacter.TargetCoords = cellPosition;
-                PlayerCharacter.Move();
-                StartCoroutine(StartEnemyTurn());
+                _isInputBlocked = true;
+                cellPosition = GridSystem.Instance.GetTilemapCoordsFromScreen(GridSystem.Instance.CurrentTilemap, Input.mousePosition);
+                bool isMovementEnable = GridSystem.Instance.IsMovementEnable(cellPosition);
+                if (isMovementEnable)
+                {
+                    GridSystem.Instance.ResetMovemap();
+                    //Build path
+                    //move
+                    StartNextTurn();
+                }
+                else
+                {
+                    Debug.Log("Cell out of move map");
+                    _isInputBlocked = false;
+                }
             }
-            else
+        }
+    }
+
+    private void DefineTurnQueue()
+    {
+        foreach(var character in CharacterList)
+        {
+            if (character.Health > 0)
             {
-                Debug.Log("Cell out of move map");
-                _isInputBlocked = false;
+                int indexToInsert = TurnQueue.FindLastIndex(delegate (Character otherChar)
+                {
+                    return otherChar.Length >= character.Length;
+                });
+                if (indexToInsert == -1)
+                    TurnQueue.Add(character);
+                else
+                    TurnQueue.Insert(indexToInsert, character);
             }
+        }
+    }
+
+    private IEnumerator WaitStartGame()
+    {
+        while (!_isUpdateStarted)
+        {
+            yield return new WaitForSeconds(0.1f);
+        }
+        StartNextTurn();
+    }
+
+    private void StartNextTurn()
+    {
+        Debug.Log("Next turn");
+        if (TurnQueue.Count == 0)
+            DefineTurnQueue();
+        Character character = TurnQueue[0];
+        if (character.gameObject.CompareTag("Enemy"))
+        {
+           StartCoroutine(StartEnemyTurn());
+        }
+        else
+        {
+            StartPlayerTurn();
         }
     }
 
     private void StartPlayerTurn()
     {
         State = GameState.PlayerTurn;
-        GridSystem.Instance.PrintCharacterMoveMap(PlayerCharacter);
+        GridSystem.Instance.PrintCharacterMoveMap(TurnQueue[0]);
         _isInputBlocked = false;
     }
 
@@ -73,13 +128,8 @@ public class GameController : MonoBehaviour
     {
         State = GameState.EnemyTurn;
         Debug.Log("Enemy turn");
-        for (int i = 0; i < Enemies.Length; ++i)
-        {
-            Enemies[i].ChooseMovement();
-            Enemies[i].Move();
-        }
         yield return new WaitForSeconds(1f);
-        StartPlayerTurn();
+        StartNextTurn();
     }
 
     private IEnumerator Calculate()
@@ -90,14 +140,17 @@ public class GameController : MonoBehaviour
 
     public Character FindCharacter(Vector3Int tileCoords)
     {
-        if (PlayerCharacter.Coords == tileCoords)
-            return PlayerCharacter;
-        for (int i = 0; i < Enemies.Length; ++i)
+        foreach (var character in TurnQueue)
         {
-            if (Enemies[i].Coords == tileCoords)
-                return Enemies[i];
+            if (character.Coords == tileCoords)
+                return character;
         }
         return null;
     }
-    */
+
+    public void RegisterCharacter(Character character)
+    {
+        if (!CharacterList.Contains(character))
+            CharacterList.Add(character);
+    }
 }

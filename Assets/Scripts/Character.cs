@@ -17,18 +17,7 @@ public class Character : MonoBehaviour
     public Vector3Int Coords;
     private Vector3Int _targetCoords;
 
-    public Vector3Int TargetCoords
-    {
-        get
-        {
-            return _targetCoords;
-        }
-        set
-        {
-            if (!_isMoving)
-                _targetCoords = value;
-        }
-    }
+    public List<Vector3Int> TargetPath;
 
     private Rigidbody2D _rb2d;
     private bool _isMoving;
@@ -41,6 +30,10 @@ public class Character : MonoBehaviour
     {
         _isMoving = false;
         _rb2d = GetComponent<Rigidbody2D>();
+
+        //register in gameController
+        GameController.Instance.RegisterCharacter(this);
+        GridSystem.Instance.DefineCharacterCoords(this);
     }
 
     void FixedUpdate()
@@ -50,7 +43,7 @@ public class Character : MonoBehaviour
             Vector3 targetWorldCoords = GridSystem.Instance.CurrentTilemap.GetCellCenterWorld(_targetCoords);
             Vector3 rotation = (targetWorldCoords - _rb2d.transform.position).normalized;
             float distance = (targetWorldCoords - _rb2d.transform.position).magnitude;
-            Vector3 newWorldCoords = _rb2d.transform.position + rotation * /*distance* */Speed * Time.fixedDeltaTime;
+            Vector3 newWorldCoords = _rb2d.transform.position + rotation * Speed * Time.fixedDeltaTime;
             //check overstepping
             if ((newWorldCoords - _rb2d.transform.position).magnitude > distance)
             {
@@ -71,129 +64,37 @@ public class Character : MonoBehaviour
             //check end of moving 
             if (distance < 0.01f)
             {
-                _isMoving = false;
-                OnMoveEnded.Invoke();
+                if (TargetPath.Count == 0)
+                {
+                    _isMoving = false;
+                    OnMoveEnded.Invoke();
+                }
+                else
+                {
+                    _targetCoords = TargetPath[0];
+                    TargetPath.RemoveAt(0);
+                }
             }
         }
     }
-}
-    /*
-    public int MoveDistance;
-    public int Health;
-    public int MaxHealth;
-    public int Damage;
-    public float Speed;
-    public int Length;
-
-    public Vector3Int Coords;
-    private Vector3Int _targetCoords;
-
-    public UnityEvent OnMoveEnded;
-    public UnityEvent OnDamageTaken;
-    public UnityEvent OnDie;
-
-    
-public Vector3Int TargetCoords
-{
-get { return _targetCoords; }
-
-set { if (!_isMoving)
-      {
-        _targetCoords = value;
-      };
-}
-}
-
-private bool _isMoving;
-
-private Rigidbody2D _rb2d;
-private SpriteRenderer _spriteRenderer;
-private Transform _hpBar;
-//debug variables
-static int turnCounter = 0;
 
 
-// Start is called before the first frame update
-protected void Start()
-{
-_rb2d = GetComponent<Rigidbody2D>();
-_spriteRenderer = GetComponent<SpriteRenderer>();
-Transform HealthBar = transform.Find("HealthBar");
-_hpBar = HealthBar.Find("Hp");
-_isMoving = false;
-OnMoveEnded.AddListener(() => { GridSystem.Instance.TakeTile(Coords); });
-}
-
-// Update is called once per frame
-void FixedUpdate()
-{
-if (_isMoving)
-{
-    Vector3 targetWorldCoords = GridSystem.Instance.CurrentTilemap.GetCellCenterWorld(_targetCoords);
-    Vector3 rotation = (targetWorldCoords - _rb2d.transform.position).normalized;
-    float distance = (targetWorldCoords - _rb2d.transform.position).magnitude;
-    Vector3 newWorldCoords = _rb2d.transform.position + rotation * /*distance* */
-    /* Speed * Time.fixedDeltaTime;
-    //check overstepping
-    if ((newWorldCoords - _rb2d.transform.position).magnitude > distance)
+    public void Move(List<Vector3Int> path)
     {
-        newWorldCoords = targetWorldCoords;
+        TargetPath = path;
+        //GridSystem.Instance.ReleaseTile(Coords);
+        _isMoving = true;
     }
 
-    //set new tilemap coordinations
-    Vector3Int newCoords = GridSystem.Instance.GetTilemapCoordsFromWorld(GridSystem.Instance.CurrentTilemap, newWorldCoords);
-    ++turnCounter;
-    if (Coords != newCoords)
+    //Stop movement
+    //Character ends current step (this target in _targetCoords) and stop
+    public void Stop()
     {
-        Debug.Log($"{turnCounter}, {gameObject.name} Old Coords: ({Coords.x},{Coords.y})");
-        Debug.Log($"{turnCounter}, {gameObject.name} New Coords: ({newCoords.x},{newCoords.y})");
-        Debug.Log($"{turnCounter}, {gameObject.name} Distance: {distance}");
-        int tileStatus = GridSystem.Instance.IsTileAvailable(newCoords);
-        if (tileStatus == 0)
-        {
-            Debug.Log($"{turnCounter}, {gameObject.name} Successful turn");
-            Debug.Log($"{turnCounter}, {gameObject.name} Tile will be realeased: ({Coords.x},{Coords.y})");
-            GridSystem.Instance.ReleaseTile(Coords);
-            Debug.Log($"{turnCounter}, {gameObject.name} Tile was realeased: ({Coords.x},{Coords.y})");
-            Coords = newCoords;
-            Debug.Log($"{turnCounter}, {gameObject.name} Tile will be taken: ({Coords.x},{Coords.y})");
-            GridSystem.Instance.TakeTile(Coords);
-            Debug.Log($"{turnCounter}, {gameObject.name} Tile was taken: ({Coords.x},{Coords.y})");
-        }
-        else if (tileStatus == 2)
-        {
-            Debug.Log($"{turnCounter}, {gameObject.name} Attack turn");
-            Character character = GameController.Instance.FindCharacter(newCoords);
-            character.Stop();
-            Debug.Log($"{turnCounter}, {gameObject.name} Another character stopped");
-            character.TakeDamage(Damage);
-            Stop();
-            Debug.Log($"{turnCounter}, {gameObject.name} Character stopped");
-        }
-    }
-    //Debug.Log($"New coords: ({Coords.x},{Coords.y})");
-    _rb2d.transform.position = newWorldCoords;
-
-    //check end of moving 
-    if (distance < 0.01f)
-    {
-        _isMoving = false;
-        OnMoveEnded.Invoke();
+        TargetPath.Clear();
     }
 }
-}
 
-public void Move()
-{
-GridSystem.Instance.ReleaseTile(Coords);
-_isMoving = true;
-}
-
-public void Stop()
-{
-_targetCoords = Coords;
-}
-
+/*
 public void TakeDamage(int damage)
 {
 Health -= damage;
@@ -207,7 +108,8 @@ if (Health <= 0)
     OnDie.Invoke();
 }
 }
-
+*/
+/*
 private IEnumerator DamageAnimation()
 {
 Color color = _spriteRenderer.color;
@@ -215,7 +117,8 @@ _spriteRenderer.color = new Color(255, 0, 0);
 yield return new WaitForSeconds(0.5f);
 _spriteRenderer.color = color;
 }
-
+*/
+/*
 private void UpdateHPBar()
 {
 float hpPercent = (float)Health / MaxHealth;
