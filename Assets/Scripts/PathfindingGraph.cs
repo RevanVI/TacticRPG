@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Node
 {
-    int[] Coords = new int[2];
+    public Vector3Int Coords = new Vector3Int();
     public List<Connection> Connections = new List<Connection>();
 
     /*
@@ -105,5 +105,14 @@ public class PathfindingGraph
     public string CreateNodeKeyFromCoordinates(int x, int y)
     {
         return $"({x},{y})";
+    }
+
+    public void RestoreProcessStatus()
+    {
+        foreach (var node in NodeGraph.Values)
+        {
+            node.ProcessStatus = Node.NodeProcessStatus.NotVisited;
+            node.ProcessValue = 0;
+        }
     }
 }

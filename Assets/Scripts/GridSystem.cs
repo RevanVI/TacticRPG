@@ -44,21 +44,26 @@ public class GridSystem : MonoBehaviour
     {
         if (Input.GetMouseButtonDown(0))
         {
+            Movemap.ClearAllTiles();
+            _graph.RestoreProcessStatus();
             Vector3Int cellPosition = GetTilemapCoordsFromScreen(GridSystem.Instance.CurrentTilemap, Input.mousePosition);
             PrintTileInfo(cellPosition);
+            PrintMoveMap(3, cellPosition);
         }
     }
 
     public List<Vector3Int> GetMoveMap(int moveDistance, Vector3Int position)
     {
         List<Vector3Int> map = new List<Vector3Int>();
-        Vector3Int curPosition = position;
         List<Node> nodesToProcess = new List<Node>();
 
         Node currentNode = _graph.NodeGraph[_graph.CreateNodeKeyFromCoordinates(position.x, position.y)];
+        if (currentNode.GameStatus == Node.TileGameStatus.Block)
+            return map;
         currentNode.ProcessValue = moveDistance;
         currentNode.ProcessStatus = Node.NodeProcessStatus.InOpenList;
         nodesToProcess.Add(currentNode);
+        map.Add(currentNode.Coords);
 
         while(nodesToProcess.Count != 0)
         {
@@ -66,26 +71,39 @@ public class GridSystem : MonoBehaviour
             foreach(var connection in currentNode.Connections)
             {
                 Node endNode = connection.EndNode;
+
                 if (endNode.ProcessStatus == Node.NodeProcessStatus.NotVisited ||
                     endNode.ProcessValue < currentNode.ProcessValue - 1)
                 {
+                    //first entry in open list
+                    if (endNode.ProcessStatus == Node.NodeProcessStatus.NotVisited)
+                        map.Add(endNode.Coords);
+
                     endNode.ProcessValue = currentNode.ProcessValue - 1;
 
-                    //if node is waiting processing then change order
+                    //if node has been already waiting processing in open list then change order
                     if (endNode.ProcessStatus == Node.NodeProcessStatus.InOpenList)
                     {
                         nodesToProcess.Remove(endNode);
                     }
 
-                    int indexToInsert = nodesToProcess.FindLastIndex(delegate(Node node)
-                                                {
-                                                    return node.ProcessValue >= endNode.ProcessValue;
-                                                });
-                    nodesToProcess.Insert(indexToInsert, endNode);
-                    endNode.ProcessStatus = Node.NodeProcessStatus.InOpenList;
+                    if (currentNode.ProcessValue - 1 > 0)
+                    {
+                        int indexToInsert = nodesToProcess.FindLastIndex(delegate (Node node)
+                                                    {
+                                                        return node.ProcessValue >= endNode.ProcessValue;
+                                                    });
+                        nodesToProcess.Insert(indexToInsert, endNode);
+                        endNode.ProcessStatus = Node.NodeProcessStatus.InOpenList;
+                    }
+                    else
+                    {
+                        endNode.ProcessStatus = Node.NodeProcessStatus.InClosedList;
+                    }
                 }
             }
             nodesToProcess.Remove(currentNode);
+            currentNode.ProcessStatus = Node.NodeProcessStatus.InClosedList;
         }
 
         return map;
@@ -109,6 +127,12 @@ public class GridSystem : MonoBehaviour
             BattleTile tile = CurrentTilemap.GetTile<BattleTile>(pos);
             if (tile != null)
             {
+                //for debug
+                if (tile.IsBlocked)
+                {
+                    int x = 2 + 2;
+                }
+                //
                 Node centralTileNode;
                 string nodeKey = _graph.CreateNodeKeyFromCoordinates(pos.x, pos.y);
                 if (_graph.NodeGraph.ContainsKey(nodeKey))
@@ -118,6 +142,7 @@ public class GridSystem : MonoBehaviour
                 else
                 {
                     centralTileNode = new Node();
+                    centralTileNode.Coords = pos;
                     if (tile.IsBlocked)
                         centralTileNode.GameStatus = Node.TileGameStatus.Block;
                     else
@@ -144,7 +169,8 @@ public class GridSystem : MonoBehaviour
                             else
                             {
                                 offsetTileNode = new Node();
-                                if (tile.IsBlocked)
+                                offsetTileNode.Coords = currentTileLocation;
+                                if (offsetTile.IsBlocked)
                                     offsetTileNode.GameStatus = Node.TileGameStatus.Block;
                                 else
                                     offsetTileNode.GameStatus = Node.TileGameStatus.Empty;
@@ -201,6 +227,7 @@ public class GridSystem : MonoBehaviour
             return true;
         return false;
     }
+
     /*
     public void TakeTile(Vector3Int coords)
     {
