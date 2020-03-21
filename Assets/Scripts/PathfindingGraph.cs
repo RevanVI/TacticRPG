@@ -4,12 +4,11 @@ using UnityEngine;
 
 public class Node
 {
+    //general variables
     public Vector3Int Coords = new Vector3Int();
     public List<Connection> Connections = new List<Connection>();
 
-    /*
-     * gameplay status of tile
-     */
+    //gameplay variables
     public enum TileGameStatus
     {
         Empty = 0,
@@ -18,9 +17,7 @@ public class Node
     }
     public TileGameStatus GameStatus;
 
-    /*
-     * Status of node in pathfinding process
-     */
+    //processing variables
     public enum NodeProcessStatus
     {
         NotVisited = 0,
@@ -31,9 +28,10 @@ public class Node
     // using in move map building to store the minimum step value
     public int ProcessValue;
 
-
     public float CostSoFar;
     public float EstimatedCost;
+
+    public Connection connection;
 
     public bool AddConnection(Connection connection)
     {
@@ -108,6 +106,14 @@ public class PathfindingGraph
         return $"({x},{y})";
     }
 
+    public Node GetNode(Vector3Int coords)
+    {
+        string key = CreateNodeKeyFromCoordinates(coords.x, coords.y);
+        if (NodeGraph.ContainsKey(key))
+            return NodeGraph[key];
+        return null;
+    }
+
     public void RestoreProcessStatus()
     {
         foreach (var node in NodeGraph.Values)
@@ -119,15 +125,16 @@ public class PathfindingGraph
 
     public List<Node> AStarPathfinding(Node start, Node end)
     {
-        List<Node> openList = new List<Node>();
         start.CostSoFar = 0;
-        start.EstimatedCost = Euristic();
+        start.EstimatedCost = Heuristic(start, end);
 
+        List<Node> openList = new List<Node>();
         openList.Add(start);
 
+        Node currentNode = null;
         while (openList.Count != 0)
         {
-            Node currentNode = openList[0];
+            currentNode = openList[0];
 
             //find node with smallest estimated cost in open list
             foreach(var node in openList)
@@ -157,12 +164,12 @@ public class PathfindingGraph
                     if (endNode.CostSoFar < cost)
                         continue;
                     heuristic = endNode.EstimatedCost - endNode.CostSoFar;
-
                 }
                 else
-                    heuristic = Euristic();
+                    heuristic = Heuristic(endNode, end);
 
-                //connection
+                endNode.connection = connection;
+                endNode.CostSoFar = cost;
                 endNode.EstimatedCost = cost + heuristic;
                 if (endNode.ProcessStatus != Node.NodeProcessStatus.InOpenList)
                 {
@@ -170,13 +177,29 @@ public class PathfindingGraph
                     openList.Add(endNode);
                 }
             }
+            openList.Remove(currentNode);
+            currentNode.ProcessStatus = Node.NodeProcessStatus.InClosedList;
         }
 
-        return null;
+        //if goal node did not found
+        if (currentNode != end)
+            return null;
+        //else build path
+        List<Node> path = new List<Node>();
+        while (currentNode != start)
+        {
+            path.Add(currentNode);
+            currentNode = currentNode.connection.StartNode;
+        }
+        path.Reverse();
+        return path;
     }
 
-    public float Euristic()
+    public float Heuristic(Node start, Node end)
     {
-        return 0;
+        float x = start.Coords.x - end.Coords.x;
+        float y = start.Coords.y - end.Coords.y;
+
+        return Mathf.Sqrt(x*x+y*y);
     }
 }

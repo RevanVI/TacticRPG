@@ -3655,10 +3655,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d9651fd3c422a524d85c1d0ce2991c35, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  CurrentCamera: {fileID: 519420031}
   CurrentTilemap: {fileID: 359196590}
   Movemap: {fileID: 1358097426}
-  CurrentCamera: {fileID: 519420031}
   MoveTile: {fileID: 11400000, guid: fad4a1cea9eec4144a7e442e868466dc, type: 2}
+  PathTile: {fileID: 11400000, guid: 4755635d6ab0fcc4ab41481c159a7ac4, type: 2}
 --- !u!1 &1951200650
 GameObject:
   m_ObjectHideFlags: 0

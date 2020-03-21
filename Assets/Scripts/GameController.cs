@@ -25,6 +25,9 @@ public class GameController : MonoBehaviour
 
     private bool _isInputBlocked;
 
+    //debug
+    bool pathDrawn = false;
+
     private void Awake()
     {
         if (Instance == null)
@@ -61,6 +64,9 @@ public class GameController : MonoBehaviour
                 if (isMovementEnable)
                 {
                     GridSystem.Instance.ResetMovemap();
+                    List<Node> path = GridSystem.Instance.BuildPath(TurnQueue[0].Coords, cellPosition);
+                    pathDrawn = true;
+                    GridSystem.Instance.PrintPath(path);
                     //Build path
                     //move
                     StartNextTurn();
@@ -120,7 +126,8 @@ public class GameController : MonoBehaviour
     private void StartPlayerTurn()
     {
         State = GameState.PlayerTurn;
-        GridSystem.Instance.PrintCharacterMoveMap(TurnQueue[0]);
+        if (!pathDrawn)
+            GridSystem.Instance.PrintCharacterMoveMap(TurnQueue[0]);
         _isInputBlocked = false;
     }
 

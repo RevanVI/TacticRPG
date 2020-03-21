@@ -7,12 +7,14 @@ using UnityEngine.Tilemaps;
 public class GridSystem : MonoBehaviour
 {
     public static GridSystem Instance;
-    public Tilemap CurrentTilemap;
-    public Tilemap Movemap;
     public Camera CurrentCamera;
-    public Tile MoveTile;
+    public Tilemap CurrentTilemap;
 
     PathfindingGraph _graph;
+
+    public Tilemap Movemap;
+    public Tile MoveTile;
+    public Tile PathTile;
 
     //public RoadTile TakenTile;
     //public RoadTile CommonTile;
@@ -244,6 +246,22 @@ public class GridSystem : MonoBehaviour
         node.GameStatus = Node.TileGameStatus.Taken;
     }
 
+    public List<Node> BuildPath(Vector3Int start, Vector3Int end)
+    {
+        Node startNode = _graph.GetNode(start);
+        Node endNode = _graph.GetNode(end);
+
+        return _graph.AStarPathfinding(startNode, endNode);
+    }
+
+    public void PrintPath(List<Node> path)
+    {
+        ResetMovemap();
+        for (int i = 0; i < path.Count; ++i)
+        {
+            Movemap.SetTile(path[i].Coords, PathTile);
+        }
+    }
     /*
     public void TakeTile(Vector3Int coords)
     {
