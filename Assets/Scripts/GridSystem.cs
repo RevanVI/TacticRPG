@@ -15,6 +15,8 @@ public class GridSystem : MonoBehaviour
     public Tilemap Movemap;
     public Tile MoveTile;
     public Tile PathTile;
+    public Tile AllyTile;
+    public Tile EnemyTile;
 
     //public RoadTile TakenTile;
     //public RoadTile CommonTile;
@@ -57,7 +59,7 @@ public class GridSystem : MonoBehaviour
         */
     }
 
-    public List<Vector3Int> GetMoveMap(int moveDistance, Vector3Int position)
+    public List<Vector3Int> GetMoveMap(Node.TileGameStatus fraction, int moveDistance, Vector3Int position)
     {
         List<Vector3Int> map = new List<Vector3Int>();
         List<Node> nodesToProcess = new List<Node>();
@@ -70,6 +72,12 @@ public class GridSystem : MonoBehaviour
         nodesToProcess.Add(currentNode);
         map.Add(currentNode.Coords);
 
+        Node.TileGameStatus oppositeFraction;
+        if (fraction == Node.TileGameStatus.Ally)
+            oppositeFraction = Node.TileGameStatus.Enemy;
+        else
+            oppositeFraction = Node.TileGameStatus.Ally;
+
         while(nodesToProcess.Count != 0)
         {
             currentNode = nodesToProcess[0];
@@ -77,14 +85,18 @@ public class GridSystem : MonoBehaviour
             {
                 Node endNode = connection.EndNode;
 
-                if (endNode.ProcessStatus == Node.NodeProcessStatus.NotVisited ||
-                    endNode.ProcessValue < currentNode.ProcessValue - 1)
+                if ((endNode.ProcessStatus == Node.NodeProcessStatus.NotVisited ||
+                    endNode.ProcessValue < currentNode.ProcessValue - 1) && endNode.GameStatus != fraction)
                 {
-                    //first entry in open list
+                    //first entry in open list and not taken by ally
                     if (endNode.ProcessStatus == Node.NodeProcessStatus.NotVisited)
                         map.Add(endNode.Coords);
 
-                    endNode.ProcessValue = currentNode.ProcessValue - 1;
+                    //hit to enemy ends turn
+                    if (endNode.GameStatus == oppositeFraction)
+                        endNode.ProcessValue = 0;
+                    else
+                        endNode.ProcessValue = currentNode.ProcessValue - 1;
 
                     //if node has been already waiting processing in open list then change order
                     if (endNode.ProcessStatus == Node.NodeProcessStatus.InOpenList)
@@ -92,7 +104,7 @@ public class GridSystem : MonoBehaviour
                         nodesToProcess.Remove(endNode);
                     }
 
-                    if (currentNode.ProcessValue - 1 > 0)
+                    if (endNode.ProcessValue > 0)
                     {
                         int indexToInsert = nodesToProcess.FindLastIndex(delegate (Node node)
                                                     {
@@ -114,11 +126,17 @@ public class GridSystem : MonoBehaviour
         return map;
     }
 
-    private void PrintMoveMap(int moveDistance, Vector3Int position)
+    private void PrintMoveMap()
     {
         foreach (var tilePosition in _moveMap)
         {
-            Movemap.SetTile(tilePosition, MoveTile);
+            Node node = _graph.NodeGraph[_graph.CreateNodeKeyFromCoordinates(tilePosition.x, tilePosition.y)];
+            if (node.GameStatus == Node.TileGameStatus.Empty)
+                Movemap.SetTile(tilePosition, MoveTile);
+            else if (node.GameStatus == Node.TileGameStatus.Enemy)
+                Movemap.SetTile(tilePosition, EnemyTile);
+            else if (node.GameStatus == Node.TileGameStatus.Ally)
+                Movemap.SetTile(tilePosition, AllyTile);
         }
     }
 
@@ -221,8 +239,13 @@ public class GridSystem : MonoBehaviour
     
     public void PrintCharacterMoveMap(Character character)
     {
-        _moveMap = GetMoveMap(character.Length, character.Coords);
-        PrintMoveMap(character.Length, character.Coords);
+        Node.TileGameStatus fraction;
+        if (character.CompareTag("Player"))
+            fraction = Node.TileGameStatus.Ally;
+        else
+            fraction = Node.TileGameStatus.Enemy;
+        _moveMap = GetMoveMap(fraction, character.Length, character.Coords);
+        PrintMoveMap();
     }
 
     public bool IsMovementEnable(Vector3Int targetPosition)
@@ -243,7 +266,10 @@ public class GridSystem : MonoBehaviour
     {
         character.Coords = GetTilemapCoordsFromWorld(CurrentTilemap, character.transform.position);
         Node node = _graph.NodeGraph[_graph.CreateNodeKeyFromCoordinates(character.Coords.x, character.Coords.y)];
-        node.GameStatus = Node.TileGameStatus.Taken;
+        if (character.gameObject.CompareTag("Player"))
+            node.GameStatus = Node.TileGameStatus.Ally;
+        else if (character.gameObject.CompareTag("Enemy"))
+            node.GameStatus = Node.TileGameStatus.Enemy;
     }
 
     public List<Node> BuildPath(Vector3Int start, Vector3Int end)
@@ -262,17 +288,20 @@ public class GridSystem : MonoBehaviour
             Movemap.SetTile(path[i].Coords, PathTile);
         }
     }
-    /*
-    public void TakeTile(Vector3Int coords)
+
+    public List<Vector3Int> ConvertFromGraphPath(List<Node> path)
     {
-        CurrentTilemap.SetTile(coords, TakenTile);
+        List<Vector3Int> coordPath = new List<Vector3Int>();
+        for (int i = 0; i < path.Count; ++i)
+            coordPath.Add(path[i].Coords);
+        return coordPath;
     }
 
-    public void ReleaseTile(Vector3Int coords)
+    public void SetTileGameplayStatus(Vector3Int coords, Node.TileGameStatus status)
     {
-        CurrentTilemap.SetTile(coords, CommonTile);
+        _graph.SetNodeGameplayStatus(coords, status);
     }
-    */
+
     /*
     public int IsTileAvailable(Vector3Int coords)
     {

@@ -13,7 +13,8 @@ public class Node
     {
         Empty = 0,
         Block = 1,
-        Taken = 2,
+        Ally = 2,
+        Enemy = 3,
     }
     public TileGameStatus GameStatus;
 
@@ -201,5 +202,10 @@ public class PathfindingGraph
         float y = start.Coords.y - end.Coords.y;
 
         return Mathf.Sqrt(x*x+y*y);
+    }
+
+    public void SetNodeGameplayStatus(Vector3Int coords, Node.TileGameStatus status)
+    {
+        NodeGraph[CreateNodeKeyFromCoordinates(coords.x, coords.y)].GameStatus = status;
     }
 }

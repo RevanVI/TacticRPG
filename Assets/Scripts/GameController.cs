@@ -64,11 +64,14 @@ public class GameController : MonoBehaviour
                 if (isMovementEnable)
                 {
                     GridSystem.Instance.ResetMovemap();
+                    //Build path
                     List<Node> path = GridSystem.Instance.BuildPath(TurnQueue[0].Coords, cellPosition);
                     pathDrawn = true;
                     GridSystem.Instance.PrintPath(path);
                     //Build path
+                    List<Vector3Int> coordPath = GridSystem.Instance.ConvertFromGraphPath(path);
                     //move
+                    TurnQueue[0].Move(coordPath);
                     StartNextTurn();
                 }
                 else

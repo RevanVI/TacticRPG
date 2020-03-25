@@ -78,10 +78,11 @@ public class Character : MonoBehaviour
         }
     }
 
-
     public void Move(List<Vector3Int> path)
     {
         TargetPath = path;
+        _targetCoords = TargetPath[0];
+        TargetPath.RemoveAt(0);
         //GridSystem.Instance.ReleaseTile(Coords);
         _isMoving = true;
     }

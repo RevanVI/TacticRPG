@@ -2520,7 +2520,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Health: 10
-  Speed: 0
+  Speed: 10
   Length: 3
   Coords: {x: 0, y: 0, z: 0}
   TargetPath: []
@@ -3660,6 +3660,8 @@ MonoBehaviour:
   Movemap: {fileID: 1358097426}
   MoveTile: {fileID: 11400000, guid: fad4a1cea9eec4144a7e442e868466dc, type: 2}
   PathTile: {fileID: 11400000, guid: 4755635d6ab0fcc4ab41481c159a7ac4, type: 2}
+  AllyTile: {fileID: 0}
+  EnemyTile: {fileID: 0}
 --- !u!1 &1951200650
 GameObject:
   m_ObjectHideFlags: 0
