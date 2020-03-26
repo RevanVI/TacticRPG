@@ -154,6 +154,11 @@ public class PathfindingGraph
                 float cost = currentNode.CostSoFar + connection.Cost;
                 float heuristic;
 
+                //Characters cant go through another characters
+                //So we need to ignore nodes that taken by ally or enemy (if this is not goal node)
+                if ((endNode.GameStatus == Node.TileGameStatus.Ally || endNode.GameStatus == Node.TileGameStatus.Enemy) && endNode != end)
+                    continue;
+
                 if (endNode.ProcessStatus == Node.NodeProcessStatus.InClosedList)
                 {
                     if (endNode.CostSoFar < cost)

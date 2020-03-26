@@ -66,13 +66,10 @@ public class GameController : MonoBehaviour
                     GridSystem.Instance.ResetMovemap();
                     //Build path
                     List<Node> path = GridSystem.Instance.BuildPath(TurnQueue[0].Coords, cellPosition);
-                    pathDrawn = true;
                     GridSystem.Instance.PrintPath(path);
-                    //Build path
                     List<Vector3Int> coordPath = GridSystem.Instance.ConvertFromGraphPath(path);
                     //move
                     TurnQueue[0].Move(coordPath);
-                    StartNextTurn();
                 }
                 else
                 {
@@ -129,23 +126,17 @@ public class GameController : MonoBehaviour
     private void StartPlayerTurn()
     {
         State = GameState.PlayerTurn;
-        if (!pathDrawn)
-            GridSystem.Instance.PrintCharacterMoveMap(TurnQueue[0]);
+        GridSystem.Instance.PrintCharacterMoveMap(TurnQueue[0]);
         _isInputBlocked = false;
     }
 
     private IEnumerator StartEnemyTurn()
     {
         State = GameState.EnemyTurn;
+        GridSystem.Instance.PrintCharacterMoveMap(TurnQueue[0]);
         Debug.Log("Enemy turn");
         yield return new WaitForSeconds(1f);
-        StartNextTurn();
-    }
-
-    private IEnumerator Calculate()
-    {
-
-        return null;
+        EndTurn();
     }
 
     public Character FindCharacter(Vector3Int tileCoords)
@@ -161,6 +152,16 @@ public class GameController : MonoBehaviour
     public void RegisterCharacter(Character character)
     {
         if (!CharacterList.Contains(character))
+        {
             CharacterList.Add(character);
+            character.OnMoveEnded.AddListener(EndTurn);
+        }
+    }
+
+    public void EndTurn()
+    {
+        GridSystem.Instance.ResetMovemap();
+        TurnQueue.RemoveAt(0);
+        StartNextTurn();
     }
 }

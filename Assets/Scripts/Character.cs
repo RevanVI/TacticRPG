@@ -57,6 +57,7 @@ public class Character : MonoBehaviour
                 Debug.Log($"{gameObject.name} Old Coords: ({Coords.x},{Coords.y})");
                 Debug.Log($"{gameObject.name} New Coords: ({newCoords.x},{newCoords.y})");
                 Debug.Log($"{gameObject.name} Distance: {distance}");
+                Coords = newCoords;
             }
             //Debug.Log($"New coords: ({Coords.x},{Coords.y})");
             _rb2d.transform.position = newWorldCoords;
@@ -67,6 +68,10 @@ public class Character : MonoBehaviour
                 if (TargetPath.Count == 0)
                 {
                     _isMoving = false;
+                    if (CompareTag("Enemy"))
+                        GridSystem.Instance.SetTileGameplayStatus(Coords, Node.TileGameStatus.Enemy);
+                    else if (CompareTag("Player"))
+                        GridSystem.Instance.SetTileGameplayStatus(Coords, Node.TileGameStatus.Ally);
                     OnMoveEnded.Invoke();
                 }
                 else
@@ -80,10 +85,11 @@ public class Character : MonoBehaviour
 
     public void Move(List<Vector3Int> path)
     {
+        //Release current tile
+        GridSystem.Instance.SetTileGameplayStatus(Coords, Node.TileGameStatus.Empty);
         TargetPath = path;
         _targetCoords = TargetPath[0];
         TargetPath.RemoveAt(0);
-        //GridSystem.Instance.ReleaseTile(Coords);
         _isMoving = true;
     }
 

@@ -70,7 +70,8 @@ public class GridSystem : MonoBehaviour
         currentNode.ProcessValue = moveDistance;
         currentNode.ProcessStatus = Node.NodeProcessStatus.InOpenList;
         nodesToProcess.Add(currentNode);
-        map.Add(currentNode.Coords);
+        //not add start tile
+        //map.Add(currentNode.Coords);
 
         Node.TileGameStatus oppositeFraction;
         if (fraction == Node.TileGameStatus.Ally)
@@ -262,6 +263,7 @@ public class GridSystem : MonoBehaviour
         _graph.RestoreProcessStatus();
     }
 
+    //Uses for initial character registration 
     public void DefineCharacterCoords(Character character)
     {
         character.Coords = GetTilemapCoordsFromWorld(CurrentTilemap, character.transform.position);
@@ -271,6 +273,8 @@ public class GridSystem : MonoBehaviour
         else if (character.gameObject.CompareTag("Enemy"))
             node.GameStatus = Node.TileGameStatus.Enemy;
     }
+
+
 
     public List<Node> BuildPath(Vector3Int start, Vector3Int end)
     {
@@ -282,7 +286,6 @@ public class GridSystem : MonoBehaviour
 
     public void PrintPath(List<Node> path)
     {
-        ResetMovemap();
         for (int i = 0; i < path.Count; ++i)
         {
             Movemap.SetTile(path[i].Coords, PathTile);
