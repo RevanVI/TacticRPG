@@ -8,6 +8,9 @@ public class Node
     public Vector3Int Coords = new Vector3Int();
     public List<Connection> Connections = new List<Connection>();
 
+    //List of objects that stay on tile (characters, effects and so on)
+    public List<GameObject> ObjectsOnTile = new List<GameObject>();
+
     //gameplay variables
     public enum TileGameStatus
     {
@@ -16,6 +19,9 @@ public class Node
         Ally = 2,
         Enemy = 3,
     }
+
+    public bool HasEffect;
+
     public TileGameStatus GameStatus;
 
     //processing variables
@@ -26,12 +32,12 @@ public class Node
         InClosedList = 2,
     }
     public NodeProcessStatus ProcessStatus;
-    // using in move map building to store the minimum step value
     public int ProcessValue;
 
     public float CostSoFar;
     public float EstimatedCost;
 
+    //How we went here in pathfinding
     public Connection connection;
 
     public bool AddConnection(Connection connection)
@@ -45,21 +51,84 @@ public class Node
         return true;
     }
 
-    public bool AddConnection(float cost, Node from, Node to)
+    public bool AddConnection(float cost, Node to)
     {
         foreach(var connection in Connections)
         {
-            if (connection.StartNode == from && connection.EndNode == to)
+            if (connection.StartNode == this && connection.EndNode == to)
                 return false;
         }
-        Connection newConnection = new Connection(cost, from, to);
+        Connection newConnection = new Connection(cost, this, to);
         Connections.Add(newConnection);
         return true;
     }
 
-    public void RemoveConnection()
+    public void RemoveConnection(Node to)
     {
+        for(int i = 0; i < Connections.Count; ++i)
+        {
+            var connection = Connections[i];
+            if (connection.EndNode == to)
+            {
+                Connections.Remove(connection);
+                --i;
+            }
+        }
+    }
 
+    //Now one effect rewrite another
+    public bool AddEffect(EffectTile effect)
+    {
+        //if tile already has effect when find it and rewrite
+        if (HasEffect)
+        {
+            foreach(var gameobject in ObjectsOnTile)
+            {
+                EffectTile oldEffect;
+                bool ok = gameobject.TryGetComponent<EffectTile>(out oldEffect);
+                if (ok)
+                {
+                    ObjectsOnTile.Remove(oldEffect.gameObject);
+                    oldEffect.EndEffect();
+                }
+            }
+        }
+
+        ObjectsOnTile.Add(effect.gameObject);
+        HasEffect = true;
+        effect.StartEffect();
+        return true;
+    }
+
+    public bool RemoveEffect(EffectTile effect)
+    {
+        if (HasEffect)
+        {
+            foreach (var gameobject in ObjectsOnTile)
+            {
+                EffectTile oldEffect;
+                bool ok = gameobject.TryGetComponent<EffectTile>(out oldEffect);
+                if (ok && oldEffect == effect)
+                {
+                    ObjectsOnTile.Remove(oldEffect.gameObject);
+                    oldEffect.EndEffect();
+                }
+            }
+            HasEffect = false;
+        }
+        return false;
+    }
+
+    public Character GetCharacter()
+    {
+        foreach(var gameobject in ObjectsOnTile)
+        {
+            Character character;
+            bool ok = gameobject.TryGetComponent<Character>(out character);
+            if (ok)
+                return character;
+        }
+        return null;
     }
 }
 

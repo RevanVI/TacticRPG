@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 
 public enum GameState
 {
@@ -25,8 +26,7 @@ public class GameController : MonoBehaviour
 
     private bool _isInputBlocked;
 
-    //debug
-    bool pathDrawn = false;
+    public UnityEvent OnTurnEnd;
 
     private void Awake()
     {

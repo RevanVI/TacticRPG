@@ -18,9 +18,6 @@ public class GridSystem : MonoBehaviour
     public Tile AllyTile;
     public Tile EnemyTile;
 
-    //public RoadTile TakenTile;
-    //public RoadTile CommonTile;
-
     private List<Vector3Int> _moveMap;
 
     private void Awake()
@@ -47,16 +44,7 @@ public class GridSystem : MonoBehaviour
 
     private void Update()
     {
-        /*
-        if (Input.GetMouseButtonDown(0))
-        {
-            //Movemap.ClearAllTiles();
-            //_graph.RestoreProcessStatus();
-            Vector3Int cellPosition = GetTilemapCoordsFromScreen(GridSystem.Instance.CurrentTilemap, Input.mousePosition);
-            PrintTileInfo(cellPosition);
-            //PrintMoveMap(3, cellPosition);
-        }
-        */
+       
     }
 
     public List<Vector3Int> GetMoveMap(Node.TileGameStatus fraction, int moveDistance, Vector3Int position)
@@ -198,7 +186,7 @@ public class GridSystem : MonoBehaviour
 
                             if (offsetTileNode.GameStatus == Node.TileGameStatus.Empty)
                             {
-                                centralTileNode.AddConnection(1f, centralTileNode, offsetTileNode);
+                                centralTileNode.AddConnection(1f, offsetTileNode);
                             }
                         }
                     }
@@ -274,7 +262,19 @@ public class GridSystem : MonoBehaviour
             node.GameStatus = Node.TileGameStatus.Enemy;
     }
 
+    public void DefineEffect(EffectTile effect)
+    {
+        Vector3Int coords = GetTilemapCoordsFromWorld(CurrentTilemap, effect.gameObject.transform.position);
+        Node node = _graph.NodeGraph[_graph.CreateNodeKeyFromCoordinates(coords.x, coords.y)];
+        node.AddEffect(effect);
+    }
 
+    public void RemoveEffect(EffectTile effect)
+    {
+        Vector3Int coords = GetTilemapCoordsFromWorld(CurrentTilemap, effect.gameObject.transform.position);
+        Node node = _graph.NodeGraph[_graph.CreateNodeKeyFromCoordinates(coords.x, coords.y)];
+        node.AddEffect(effect);
+    }
 
     public List<Node> BuildPath(Vector3Int start, Vector3Int end)
     {
@@ -304,6 +304,7 @@ public class GridSystem : MonoBehaviour
     {
         _graph.SetNodeGameplayStatus(coords, status);
     }
+
 
     /*
     public int IsTileAvailable(Vector3Int coords)
