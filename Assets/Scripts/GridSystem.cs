@@ -273,7 +273,7 @@ public class GridSystem : MonoBehaviour
     {
         Vector3Int coords = GetTilemapCoordsFromWorld(CurrentTilemap, effect.gameObject.transform.position);
         Node node = _graph.NodeGraph[_graph.CreateNodeKeyFromCoordinates(coords.x, coords.y)];
-        node.AddEffect(effect);
+        node.RemoveEffect(effect);
     }
 
     public List<Node> BuildPath(Vector3Int start, Vector3Int end)

@@ -115,6 +115,7 @@ public class Node
                 }
             }
             HasEffect = false;
+            return true;
         }
         return false;
     }

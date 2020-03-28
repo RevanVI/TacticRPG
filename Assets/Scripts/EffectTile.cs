@@ -44,6 +44,7 @@ public class EffectTile : MonoBehaviour
             if (Lifetime == 0)
             {
                 GridSystem.Instance.RemoveEffect(this);
+                EndEffect();
             }
         }
     }
