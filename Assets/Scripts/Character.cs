@@ -7,6 +7,7 @@ using UnityEngine.Events;
 public class Character : MonoBehaviour
 {
     public int Health;
+    public int CurHealth;
 
     //weapon
     //armor
@@ -33,7 +34,7 @@ public class Character : MonoBehaviour
 
         //register in gameController
         GameController.Instance.RegisterCharacter(this);
-        GridSystem.Instance.DefineCharacterCoords(this);
+        GridSystem.Instance.DefineCharacter(this);
     }
 
     void FixedUpdate()
@@ -68,10 +69,7 @@ public class Character : MonoBehaviour
                 if (TargetPath.Count == 0)
                 {
                     _isMoving = false;
-                    if (CompareTag("Enemy"))
-                        GridSystem.Instance.SetTileGameplayStatus(Coords, Node.TileGameStatus.Enemy);
-                    else if (CompareTag("Player"))
-                        GridSystem.Instance.SetTileGameplayStatus(Coords, Node.TileGameStatus.Ally);
+                    GridSystem.Instance.AddCharacterToNode(Coords, this);
                     OnMoveEnded.Invoke();
                 }
                 else
@@ -86,7 +84,8 @@ public class Character : MonoBehaviour
     public void Move(List<Vector3Int> path)
     {
         //Release current tile
-        GridSystem.Instance.SetTileGameplayStatus(Coords, Node.TileGameStatus.Empty);
+        bool deb = GridSystem.Instance.RemoveCharacterFromNode(Coords, this);
+        Debug.Log($"Remove from node: {deb}");
         TargetPath = path;
         _targetCoords = TargetPath[0];
         TargetPath.RemoveAt(0);

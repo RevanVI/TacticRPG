@@ -27,7 +27,7 @@ public class GameController : MonoBehaviour
     private bool _isInputBlocked;
 
     public UnityEvent OnTurnEnd;
-
+ 
     private void Awake()
     {
         if (Instance == null)
@@ -65,7 +65,7 @@ public class GameController : MonoBehaviour
                 {
                     GridSystem.Instance.ResetMovemap();
                     //Build path
-                    List<Node> path = GridSystem.Instance.BuildPath(TurnQueue[0].Coords, cellPosition);
+                    List<Node> path = GridSystem.Instance.BuildPath(TurnQueue[0].Coords, cellPosition, TurnQueue[0]);
                     GridSystem.Instance.PrintPath(path);
                     List<Vector3Int> coordPath = GridSystem.Instance.ConvertFromGraphPath(path);
                     //move

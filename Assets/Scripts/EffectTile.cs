@@ -22,7 +22,7 @@ public class EffectTile : MonoBehaviour
     public int Lifetime;
 
     public EffectType Type;
-    
+    public float Value;
     //calls then effect placed on tile
     public void StartEffect()
     {
