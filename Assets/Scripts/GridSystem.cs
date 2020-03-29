@@ -347,7 +347,7 @@ public class GridSystem : MonoBehaviour
             foreach(var gameobject in node.ObjectsOnTile)
             {
                 Character oldCharacter;
-                bool ok = gameObject.TryGetComponent<Character>(out oldCharacter);
+                bool ok = gameobject.TryGetComponent<Character>(out oldCharacter);
                 if (ok)
                 {
                     node.ObjectsOnTile.Remove(gameObject);

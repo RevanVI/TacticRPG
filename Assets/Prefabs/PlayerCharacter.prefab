@@ -46,6 +46,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Health: 10
+  CurHealth: 10
   Speed: 10
   Length: 3
   Coords: {x: 0, y: 0, z: 0}
@@ -95,9 +96,9 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 2
+  m_SortingLayerID: 677084055
+  m_SortingLayer: 1
+  m_SortingOrder: 3
   m_Sprite: {fileID: 4795774732121241884, guid: 92774b571ea790946a0e94204dc43ee3,
     type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}

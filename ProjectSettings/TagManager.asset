@@ -39,6 +39,12 @@ TagManager:
   - 
   - 
   m_SortingLayers:
+  - name: Background
+    uniqueID: 2172016089
+    locked: 0
   - name: Default
     uniqueID: 0
+    locked: 0
+  - name: Movemap
+    uniqueID: 677084055
     locked: 0
