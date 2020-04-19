@@ -22,7 +22,7 @@ public class EffectTile : MonoBehaviour
     public int Lifetime;
 
     public EffectType Type;
-    public float Value;
+    public int Value;
     //calls then effect placed on tile
     public void StartEffect()
     {
@@ -66,5 +66,10 @@ public class EffectTile : MonoBehaviour
     {
         Debug.Log("Someone has entered in collider");
         //do something
+        //remove from here
+        Character character = collision.gameObject.GetComponent<Character>();
+        if (character)
+            character.TakeDamage(Value);
+
     }
 }

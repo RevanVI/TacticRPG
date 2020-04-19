@@ -20,12 +20,14 @@ public class GameController : MonoBehaviour
 
     public PlayerController PlayerController;
     public List<Character> TurnQueue;
+    public Character _currentCharacter;
 
     public List<Character> CharacterList;
     public EnemyController[] Enemies;
 
     private bool _isInputBlocked;
 
+    public UnityEvent OnTurnStart;
     public UnityEvent OnTurnEnd;
  
     private void Awake()
@@ -65,11 +67,11 @@ public class GameController : MonoBehaviour
                 {
                     GridSystem.Instance.ResetMovemap();
                     //Build path
-                    List<Node> path = GridSystem.Instance.BuildPath(TurnQueue[0].Coords, cellPosition, TurnQueue[0]);
+                    List<Node> path = GridSystem.Instance.BuildPath(_currentCharacter.Coords, cellPosition, _currentCharacter);
                     GridSystem.Instance.PrintPath(path);
                     List<Vector3Int> coordPath = GridSystem.Instance.ConvertFromGraphPath(path);
                     //move
-                    TurnQueue[0].Move(coordPath);
+                    _currentCharacter.Move(coordPath);
                 }
                 else
                 {
@@ -84,11 +86,11 @@ public class GameController : MonoBehaviour
     {
         foreach(var character in CharacterList)
         {
-            if (character.Health > 0)
+            if (character.Properties.Health > 0)
             {
                 int indexToInsert = TurnQueue.FindLastIndex(delegate (Character otherChar)
                 {
-                    return otherChar.Length >= character.Length;
+                    return otherChar.Properties.Speed >= character.Properties.Speed;
                 });
                 if (indexToInsert == -1)
                     TurnQueue.Add(character);
@@ -104,18 +106,20 @@ public class GameController : MonoBehaviour
         {
             yield return new WaitForSeconds(0.1f);
         }
+        DefineTurnQueue();
         StartNextTurn();
     }
 
     private void StartNextTurn()
     {
         Debug.Log("Next turn");
-        if (TurnQueue.Count == 0)
-            DefineTurnQueue();
-        Character character = TurnQueue[0];
-        if (character.gameObject.CompareTag("Enemy"))
+        _currentCharacter = TurnQueue[0];
+        TurnQueue.RemoveAt(0);
+        OnTurnStart.Invoke();
+        if (_currentCharacter.gameObject.CompareTag("Enemy"))
         {
-           StartCoroutine(StartEnemyTurn());
+            StartPlayerTurn();
+           //StartCoroutine(StartEnemyTurn());
         }
         else
         {
@@ -126,14 +130,14 @@ public class GameController : MonoBehaviour
     private void StartPlayerTurn()
     {
         State = GameState.PlayerTurn;
-        GridSystem.Instance.PrintCharacterMoveMap(TurnQueue[0]);
+        GridSystem.Instance.PrintCharacterMoveMap(_currentCharacter);
         _isInputBlocked = false;
     }
 
     private IEnumerator StartEnemyTurn()
     {
         State = GameState.EnemyTurn;
-        GridSystem.Instance.PrintCharacterMoveMap(TurnQueue[0]);
+        GridSystem.Instance.PrintCharacterMoveMap(_currentCharacter);
         Debug.Log("Enemy turn");
         yield return new WaitForSeconds(1f);
         EndTurn();
@@ -161,7 +165,13 @@ public class GameController : MonoBehaviour
     public void EndTurn()
     {
         GridSystem.Instance.ResetMovemap();
-        TurnQueue.RemoveAt(0);
+        TurnQueue.Add(_currentCharacter);
+        OnTurnEnd.Invoke();
         StartNextTurn();
+    }
+
+    public CharacterProperties GetCurrentCharacterProperties()
+    {
+        return _currentCharacter.Properties;
     }
 }

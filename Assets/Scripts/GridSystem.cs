@@ -136,7 +136,7 @@ public class GridSystem : MonoBehaviour
     {
         Node.TileGameStatus fraction;
         fraction = GetTileStatusFromCharacter(character);
-        _moveMap = GetMoveMap(fraction, character.Length, character.Coords);
+        _moveMap = GetMoveMap(fraction, character.Properties.Speed, character.Coords);
         PrintMoveMap();
     }
 
@@ -415,17 +415,17 @@ public class GridSystem : MonoBehaviour
                     {
                         /*
                          * maxHealth - damage
-                         * > 80% = +2
-                         * 50-80% = +4
-                         * 0-50% = +6
+                         * > 80% = +30
+                         * 50-80% = +50
+                         * 0-50% = +100
                          */
-                        float hpPercent = (character.CurHealth - effect.Value) / character.Health;
+                        float hpPercent = (character.Properties.CurrentHealth - effect.Value) / character.Properties.Health;
                         if (hpPercent > 0.8f)
-                            cost += 2;
+                            cost += 30;
                         else if (hpPercent < 0.5f)
-                            cost += 6;
+                            cost += 50;
                         else
-                            cost += 4;
+                            cost += 100;
                     }
                     else if (effect.Type == EffectType.Heal)
                     {
@@ -436,9 +436,9 @@ public class GridSystem : MonoBehaviour
                          * 50-80% = -4
                          * <50% = -6
                          */
-                        if (character.CurHealth != character.Health)
+                        if (character.Properties.CurrentHealth != character.Properties.Health)
                         {
-                            float hpPercent = character.CurHealth / character.Health;
+                            float hpPercent = character.Properties.CurrentHealth / character.Properties.Health;
                             if (hpPercent > 0.8f)
                                 cost -= 2;
                             else if (hpPercent < 0.5f)

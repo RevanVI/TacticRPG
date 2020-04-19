@@ -98,7 +98,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Lifetime: -1
   Type: 0
-  Value: 0
+  Value: 2
 --- !u!61 &8413906580669448653
 BoxCollider2D:
   m_ObjectHideFlags: 0

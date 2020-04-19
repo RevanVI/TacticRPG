@@ -3,17 +3,25 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 using UnityEngine.Events;
+using System;
+
+[Serializable]
+public struct CharacterProperties
+{
+    public string Name;
+    public int Level;
+    public Sprite Icon;
+    public int Health;
+    public int CurrentHealth;
+    public int Speed;
+}
 
 public class Character : MonoBehaviour
 {
-    public int Health;
-    public int CurHealth;
+    public CharacterProperties Properties;
 
     //weapon
     //armor
-
-    public int Speed;
-    public int Length;
 
     public Vector3Int Coords;
     private Vector3Int _targetCoords;
@@ -44,7 +52,7 @@ public class Character : MonoBehaviour
             Vector3 targetWorldCoords = GridSystem.Instance.CurrentTilemap.GetCellCenterWorld(_targetCoords);
             Vector3 rotation = (targetWorldCoords - _rb2d.transform.position).normalized;
             float distance = (targetWorldCoords - _rb2d.transform.position).magnitude;
-            Vector3 newWorldCoords = _rb2d.transform.position + rotation * Speed * Time.fixedDeltaTime;
+            Vector3 newWorldCoords = _rb2d.transform.position + rotation * Properties.Speed * Time.fixedDeltaTime;
             //check overstepping
             if ((newWorldCoords - _rb2d.transform.position).magnitude > distance)
             {
@@ -98,23 +106,25 @@ public class Character : MonoBehaviour
     {
         TargetPath.Clear();
     }
+
+
+    public void TakeDamage(int damage)
+    {
+        Properties.CurrentHealth -= damage;
+        OnDamageTaken.Invoke();
+        /*
+        //UpdateHPBar();
+        //StartCoroutine(DamageAnimation());
+    /if (Health <= 0)
+    {
+        gameObject.SetActive(false);
+        GridSystem.Instance.ReleaseTile(Coords);
+        OnDie.Invoke();
+    }
+    */
+    }
 }
 
-/*
-public void TakeDamage(int damage)
-{
-Health -= damage;
-OnDamageTaken.Invoke();
-UpdateHPBar();
-StartCoroutine(DamageAnimation());
-if (Health <= 0)
-{
-    gameObject.SetActive(false);
-    GridSystem.Instance.ReleaseTile(Coords);
-    OnDie.Invoke();
-}
-}
-*/
 /*
 private IEnumerator DamageAnimation()
 {
