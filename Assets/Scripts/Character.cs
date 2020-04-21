@@ -16,10 +16,12 @@ public struct CharacterProperties
     public int Speed;
 }
 
+
 public class Character : MonoBehaviour
 {
     public CharacterProperties Properties;
 
+    public int BattleId;
     //weapon
     //armor
 
@@ -32,7 +34,7 @@ public class Character : MonoBehaviour
     private bool _isMoving;
 
     public UnityEvent OnMoveEnded;
-    public UnityEvent OnDamageTaken;
+    public UnityEvent<int> OnDamageTaken;
     public UnityEvent OnDie;
 
     private void Start()
@@ -111,7 +113,7 @@ public class Character : MonoBehaviour
     public void TakeDamage(int damage)
     {
         Properties.CurrentHealth -= damage;
-        OnDamageTaken.Invoke();
+        OnDamageTaken.Invoke(BattleId);
         /*
         //UpdateHPBar();
         //StartCoroutine(DamageAnimation());

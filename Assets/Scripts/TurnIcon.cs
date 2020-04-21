@@ -7,15 +7,16 @@ public class TurnIcon : MonoBehaviour
 {
     public Image CharacterImage;
     public Text HPText;
+    public int ChainedCharacterBattleId;
 
     public TurnIcon()
     {
-
+        ChainedCharacterBattleId = -1;
     }
 
-    public TurnIcon(CharacterProperties properties)
+    public TurnIcon(int characterBattleId, CharacterProperties properties)
     {
-        SetCharacter(properties);
+        SetCharacter(characterBattleId, properties);
     }
 
     // Start is called before the first frame update
@@ -30,11 +31,17 @@ public class TurnIcon : MonoBehaviour
         
     }
 
-    public void SetCharacter(CharacterProperties properties)
+    public void SetCharacter(int characterBattleId, CharacterProperties properties)
     {
+        ChainedCharacterBattleId = characterBattleId;
         CharacterImage.sprite = properties.Icon;
         HPText.text = $"HP: {properties.CurrentHealth} / {properties.Health}";
     } 
+
+    public void UpdateIcon(CharacterProperties properties)
+    {
+        SetHP(properties.CurrentHealth, properties.Health);
+    }
 
     public void SetHP(int currentHP, int maxHP)
     {

@@ -20,6 +20,7 @@ public class GameController : MonoBehaviour
 
     public PlayerController PlayerController;
     public List<Character> TurnQueue;
+    public TurnPanelController TurnPanelControllerRef;
     public Character _currentCharacter;
 
     public List<Character> CharacterList;
@@ -29,7 +30,12 @@ public class GameController : MonoBehaviour
 
     public UnityEvent OnTurnStart;
     public UnityEvent OnTurnEnd;
- 
+
+    public int RoundCount;
+    public int TurnCount;
+
+    private int _battleIdCounter;
+
     private void Awake()
     {
         if (Instance == null)
@@ -37,6 +43,10 @@ public class GameController : MonoBehaviour
 
         TurnQueue = new List<Character>();
         CharacterList = new List<Character>();
+
+        RoundCount = 0;
+        TurnCount = 0;
+        _battleIdCounter = 0;
     }
 
     // Start is called before the first frame update
@@ -98,6 +108,7 @@ public class GameController : MonoBehaviour
                     TurnQueue.Insert(indexToInsert, character);
             }
         }
+        TurnQueue.Add(null);
     }
 
     private IEnumerator WaitStartGame()
@@ -107,6 +118,13 @@ public class GameController : MonoBehaviour
             yield return new WaitForSeconds(0.1f);
         }
         DefineTurnQueue();
+        for (int i = 0; i < TurnQueue.Count; ++i)
+        {
+            if (TurnQueue[i] != null)
+                TurnPanelControllerRef.AddIcon(TurnQueue[i].BattleId, TurnQueue[i].Properties);
+            //else paste marker
+        }
+        RoundCount = 1;
         StartNextTurn();
     }
 
@@ -115,6 +133,16 @@ public class GameController : MonoBehaviour
         Debug.Log("Next turn");
         _currentCharacter = TurnQueue[0];
         TurnQueue.RemoveAt(0);
+        if (_currentCharacter == null) // next round start
+        {
+            ++RoundCount;
+            //set up new marker
+            TurnQueue.Add(null);
+            //get real next character
+            _currentCharacter = TurnQueue[0];
+            TurnQueue.RemoveAt(0);
+        }
+        ++TurnCount;
         OnTurnStart.Invoke();
         if (_currentCharacter.gameObject.CompareTag("Enemy"))
         {
@@ -153,12 +181,23 @@ public class GameController : MonoBehaviour
         return null;
     }
 
+    public Character FindCharacter(int battleId)
+    {
+        foreach (var character in CharacterList)
+            if (character.BattleId == battleId)
+                return character;
+        return null;
+    }
+
     public void RegisterCharacter(Character character)
     {
         if (!CharacterList.Contains(character))
         {
+            character.BattleId = _battleIdCounter;
+            ++_battleIdCounter;
             CharacterList.Add(character);
             character.OnMoveEnded.AddListener(EndTurn);
+            character.OnDamageTaken.AddListener(OnCharacterTakeDamage);
         }
     }
 
@@ -170,8 +209,15 @@ public class GameController : MonoBehaviour
         StartNextTurn();
     }
 
-    public CharacterProperties GetCurrentCharacterProperties()
+    public void GetCurrentCharacterInfo(out int characterBattleId, out CharacterProperties properties)
     {
-        return _currentCharacter.Properties;
+        characterBattleId = _currentCharacter.BattleId;
+        properties = _currentCharacter.Properties;
+    }
+
+    public void OnCharacterTakeDamage(int characterbattleId)
+    {
+        Character character = FindCharacter(characterbattleId);
+        TurnPanelControllerRef.UpdateTurnIcon(characterbattleId, character.Properties);
     }
 }
