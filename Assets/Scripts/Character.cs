@@ -16,6 +16,10 @@ public struct CharacterProperties
     public int Speed;
 }
 
+public class UnityIntEvent: UnityEvent<int>
+{
+
+}
 
 public class Character : MonoBehaviour
 {
@@ -34,7 +38,7 @@ public class Character : MonoBehaviour
     private bool _isMoving;
 
     public UnityEvent OnMoveEnded;
-    public UnityEvent<int> OnDamageTaken;
+    public UnityIntEvent OnDamageTaken;
     public UnityEvent OnDie;
 
     private void Start()
@@ -42,6 +46,7 @@ public class Character : MonoBehaviour
         _isMoving = false;
         _rb2d = GetComponent<Rigidbody2D>();
 
+        OnDamageTaken = new UnityIntEvent();
         //register in gameController
         GameController.Instance.RegisterCharacter(this);
         GridSystem.Instance.DefineCharacter(this);

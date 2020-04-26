@@ -105,7 +105,7 @@ public class GameController : MonoBehaviour
                 if (indexToInsert == -1)
                     TurnQueue.Add(character);
                 else
-                    TurnQueue.Insert(indexToInsert, character);
+                    TurnQueue.Insert(indexToInsert, character);   
             }
         }
         TurnQueue.Add(null);
@@ -121,8 +121,13 @@ public class GameController : MonoBehaviour
         for (int i = 0; i < TurnQueue.Count; ++i)
         {
             if (TurnQueue[i] != null)
-                TurnPanelControllerRef.AddIcon(TurnQueue[i].BattleId, TurnQueue[i].Properties);
+            { 
+                TurnPanelControllerRef.AddIcon(TurnQueue[i], TurnQueue[i].Properties);
+                //on this point character and his icon exist and we can connect it
+                //TurnQueue[i].OnDamageTaken.AddListener(OnCharacterTakeDamage);
+            }
             //else paste marker
+            
         }
         RoundCount = 1;
         StartNextTurn();

@@ -19,6 +19,7 @@ public class GridSystem : MonoBehaviour
     public Tile EnemyTile;
 
     private List<Vector3Int> _moveMap;
+    private List<Vector3Int> _attackMap;
 
     private void Awake()
     {

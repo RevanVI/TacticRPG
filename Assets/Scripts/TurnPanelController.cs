@@ -19,8 +19,6 @@ public class TurnPanelController : MonoBehaviour
     {
         TurnIcons = new List<TurnIcon>();
         GameController.Instance.OnTurnStart.AddListener(OnTurnStart);
-
-
     }
 
     // Update is called once per frame
@@ -29,11 +27,11 @@ public class TurnPanelController : MonoBehaviour
         
     }
 
-    public void AddIcon(int characterBattleId, CharacterProperties properties)
+    public void AddIcon(Character character, CharacterProperties properties)
     {
         GameObject gameObject = Instantiate(TurnIconPrefab, TurnIconsHandler.transform);
         TurnIcon turnIcon = gameObject.GetComponent<TurnIcon>();
-        turnIcon.SetCharacter(characterBattleId, properties);
+        turnIcon.SetCharacter(character.BattleId, properties);
         TurnIcons.Add(turnIcon);
     }
 
