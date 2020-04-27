@@ -51,14 +51,14 @@ public class Node
         return true;
     }
 
-    public bool AddConnection(float cost, Node to)
+    public bool AddConnection(Node to)
     {
         foreach(var connection in Connections)
         {
             if (connection.StartNode == this && connection.EndNode == to)
                 return false;
         }
-        Connection newConnection = new Connection(cost, this, to);
+        Connection newConnection = new Connection(this, to);
         Connections.Add(newConnection);
         return true;
     }
@@ -106,20 +106,20 @@ public class Node
 
 public class Connection
 {
-    public float Cost;
+    //public float Cost;
     public Node StartNode;
     public Node EndNode;
 
     public Connection()
     {
-        Cost = 0;
+        //Cost = 0;
         StartNode = null;
         EndNode = null;
     }
 
-    public Connection(float cost, Node from, Node to)
+    public Connection(Node from, Node to)
     {
-        Cost = cost;
+        //Cost = cost;
         StartNode = from;
         EndNode = to;
     }

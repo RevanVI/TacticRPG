@@ -138,6 +138,16 @@ PrefabInstance:
       propertyPath: m_TagString
       value: Enemy
       objectReference: {fileID: 0}
+    - target: {fileID: 8744826376382252229, guid: 697d541291174e347b5b852f67a9630f,
+        type: 3}
+      propertyPath: m_Layer
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 8744826376382252230, guid: 697d541291174e347b5b852f67a9630f,
+        type: 3}
+      propertyPath: m_BodyType
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 8744826376382252232, guid: 697d541291174e347b5b852f67a9630f,
         type: 3}
       propertyPath: Speed
@@ -182,6 +192,16 @@ PrefabInstance:
     - target: {fileID: 8744826376382252232, guid: 697d541291174e347b5b852f67a9630f,
         type: 3}
       propertyPath: Coords.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8744826376382252232, guid: 697d541291174e347b5b852f67a9630f,
+        type: 3}
+      propertyPath: Properties.Class
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 8744826376382252232, guid: 697d541291174e347b5b852f67a9630f,
+        type: 3}
+      propertyPath: Properties.BaseDamage
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8744826376382252233, guid: 697d541291174e347b5b852f67a9630f,
@@ -253,6 +273,21 @@ PrefabInstance:
       propertyPath: m_Name
       value: Ally1
       objectReference: {fileID: 0}
+    - target: {fileID: 8744826376382252229, guid: 697d541291174e347b5b852f67a9630f,
+        type: 3}
+      propertyPath: m_Layer
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 8744826376382252229, guid: 697d541291174e347b5b852f67a9630f,
+        type: 3}
+      propertyPath: m_TagString
+      value: Ally
+      objectReference: {fileID: 0}
+    - target: {fileID: 8744826376382252230, guid: 697d541291174e347b5b852f67a9630f,
+        type: 3}
+      propertyPath: m_BodyType
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 8744826376382252232, guid: 697d541291174e347b5b852f67a9630f,
         type: 3}
       propertyPath: Speed
@@ -298,6 +333,11 @@ PrefabInstance:
         type: 3}
       propertyPath: Coords.y
       value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 8744826376382252232, guid: 697d541291174e347b5b852f67a9630f,
+        type: 3}
+      propertyPath: Properties.BaseDamage
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 8744826376382252233, guid: 697d541291174e347b5b852f67a9630f,
         type: 3}
@@ -2006,7 +2046,7 @@ GameObject:
   - component: {fileID: 1450796587}
   - component: {fileID: 1450796586}
   - component: {fileID: 1450796585}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Edges
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3486,7 +3526,7 @@ Rigidbody2D:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1450796581}
-  m_BodyType: 0
+  m_BodyType: 2
   m_Simulated: 1
   m_UseFullKinematicContacts: 0
   m_UseAutoMass: 0
@@ -5797,12 +5837,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentCamera: {fileID: 519420031}
-  CurrentTilemap: {fileID: 359196590}
+  PathfindingMap: {fileID: 359196590}
   Movemap: {fileID: 1358097426}
-  MoveTile: {fileID: 11400000, guid: fad4a1cea9eec4144a7e442e868466dc, type: 2}
-  PathTile: {fileID: 11400000, guid: 4755635d6ab0fcc4ab41481c159a7ac4, type: 2}
-  AllyTile: {fileID: 11400000, guid: d27a1f3a87eb2db4bb6c02c6177f4a54, type: 2}
-  EnemyTile: {fileID: 11400000, guid: 5cee1bc05172c4646b6834ae2bc815ec, type: 2}
+  MoveTile: {fileID: 11400000, guid: 18823f5089adfa7408903e819593fc10, type: 2}
+  PathTile: {fileID: 11400000, guid: fb9450cf95fb99542bafcdad64321e22, type: 2}
+  AllyTile: {fileID: 11400000, guid: d49f8eb2d63889a44a815fcaa78a6b8c, type: 2}
+  EnemyTile: {fileID: 11400000, guid: 084d1d616619b8e4ea1f6a1a5f29ec88, type: 2}
 --- !u!4 &1911364341 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6241859755739520737, guid: 36b969997df529f4eae5b2d1e85bc0b8,
@@ -5846,6 +5886,7 @@ MonoBehaviour:
   _currentCharacter: {fileID: 0}
   CharacterList: []
   Enemies: []
+  AvailableRangedTargets: []
   OnTurnStart:
     m_PersistentCalls:
       m_Calls: []
@@ -5947,6 +5988,38 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1960147518}
   m_CullTransparentMesh: 0
+--- !u!1 &2031119820 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8744826376382252229, guid: 697d541291174e347b5b852f67a9630f,
+    type: 3}
+  m_PrefabInstance: {fileID: 2242570}
+  m_PrefabAsset: {fileID: 0}
+--- !u!61 &2031119821
+BoxCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2031119820}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: 0.03464155, y: 0.09761954}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0.5, y: 0}
+    oldSize: {x: 1, y: 1}
+    newSize: {x: 1, y: 1}
+    adaptiveTilingThreshold: 0.5
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  serializedVersion: 2
+  m_Size: {x: 0.34873816, y: 0.19523908}
+  m_EdgeRadius: 0
 --- !u!1 &2053455739
 GameObject:
   m_ObjectHideFlags: 0
@@ -6082,6 +6155,21 @@ PrefabInstance:
       propertyPath: m_Name
       value: PlayerCharacter
       objectReference: {fileID: 0}
+    - target: {fileID: 8744826376382252229, guid: 697d541291174e347b5b852f67a9630f,
+        type: 3}
+      propertyPath: m_Layer
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 8744826376382252229, guid: 697d541291174e347b5b852f67a9630f,
+        type: 3}
+      propertyPath: m_TagString
+      value: Ally
+      objectReference: {fileID: 0}
+    - target: {fileID: 8744826376382252230, guid: 697d541291174e347b5b852f67a9630f,
+        type: 3}
+      propertyPath: m_BodyType
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 8744826376382252232, guid: 697d541291174e347b5b852f67a9630f,
         type: 3}
       propertyPath: CurHealth
@@ -6122,6 +6210,16 @@ PrefabInstance:
         type: 3}
       propertyPath: Coords.x
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8744826376382252232, guid: 697d541291174e347b5b852f67a9630f,
+        type: 3}
+      propertyPath: Properties.Class
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8744826376382252232, guid: 697d541291174e347b5b852f67a9630f,
+        type: 3}
+      propertyPath: Properties.BaseDamage
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 8744826376382252233, guid: 697d541291174e347b5b852f67a9630f,
         type: 3}

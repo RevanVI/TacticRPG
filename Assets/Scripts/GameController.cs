@@ -25,6 +25,8 @@ public class GameController : MonoBehaviour
 
     public List<Character> CharacterList;
     public EnemyController[] Enemies;
+    public List<Vector3Int> AvailableRangedTargets;
+
 
     private bool _isInputBlocked;
 
@@ -55,6 +57,8 @@ public class GameController : MonoBehaviour
         _isInputBlocked = true;
         State = GameState.Start;
 
+        AvailableRangedTargets = new List<Vector3Int>();
+
         _isUpdateStarted = false;
         StartCoroutine(WaitStartGame());
     }
@@ -65,28 +69,49 @@ public class GameController : MonoBehaviour
         _isUpdateStarted = true;
         if (Input.GetMouseButtonDown(0))
         {
-            Vector3Int cellPosition = GridSystem.Instance.GetTilemapCoordsFromScreen(GridSystem.Instance.CurrentTilemap, Input.mousePosition);
+            Vector3Int cellPosition = GridSystem.Instance.GetTilemapCoordsFromScreen(GridSystem.Instance.PathfindingMap, Input.mousePosition);
             GridSystem.Instance.PrintTileInfo(cellPosition);
 
             if (State == GameState.PlayerTurn && !_isInputBlocked)
             {
                 _isInputBlocked = true;
-                cellPosition = GridSystem.Instance.GetTilemapCoordsFromScreen(GridSystem.Instance.CurrentTilemap, Input.mousePosition);
-                bool isMovementEnable = GridSystem.Instance.IsMovementEnable(cellPosition);
-                if (isMovementEnable)
+
+                if (AvailableRangedTargets.IndexOf(cellPosition) != -1)
                 {
-                    GridSystem.Instance.ResetMovemap();
-                    //Build path
-                    List<Node> path = GridSystem.Instance.BuildPath(_currentCharacter.Coords, cellPosition, _currentCharacter);
-                    GridSystem.Instance.PrintPath(path);
-                    List<Vector3Int> coordPath = GridSystem.Instance.ConvertFromGraphPath(path);
-                    //move
-                    _currentCharacter.Move(coordPath);
+                    Character targetCharacter = GridSystem.Instance.GetCharacterFromCoords(cellPosition);
+                    //animations and so on)
+                    targetCharacter.TakeDamage(_currentCharacter.Properties.BaseDamage);
+                    EndTurn();
                 }
                 else
-                {
-                    Debug.Log("Cell out of move map");
-                    _isInputBlocked = false;
+                { 
+                    bool isMovementEnable = GridSystem.Instance.IsMovementEnable(cellPosition);
+                    if (isMovementEnable)
+                    {
+                        GridSystem.Instance.ResetMovemap();
+                        //Build path
+                        List<Node> path = GridSystem.Instance.BuildPath(_currentCharacter.Coords, cellPosition, _currentCharacter);
+                        GridSystem.Instance.PrintPath(path);
+                        List<Vector3Int> coordPath = GridSystem.Instance.ConvertFromGraphPath(path);
+
+                        //there is two options: this movements is melee attack or not
+                        Character targetCharacter = GridSystem.Instance.GetCharacterFromCoords(cellPosition);
+                        if (targetCharacter == null)
+                        {
+                            //move
+                            _currentCharacter.Move(coordPath);
+                        }
+                        else
+                        {
+                            //attack
+                            _currentCharacter.Move(coordPath, targetCharacter);
+                        }
+                    }
+                    else
+                    {
+                        Debug.Log("Cell out of move map");
+                        _isInputBlocked = false;
+                    }
                 }
             }
         }
@@ -164,6 +189,13 @@ public class GameController : MonoBehaviour
     {
         State = GameState.PlayerTurn;
         GridSystem.Instance.PrintCharacterMoveMap(_currentCharacter);
+
+        if (_currentCharacter.Properties.Class == CharacterClass.Archer || _currentCharacter.Properties.Class == CharacterClass.Mage)
+        {
+            DefineAvailableRangedTargets(_currentCharacter);
+            GridSystem.Instance.PrintMovemapTiles(AvailableRangedTargets, GridSystem.Instance.EnemyTile);
+        }
+
         _isInputBlocked = false;
     }
 
@@ -209,6 +241,7 @@ public class GameController : MonoBehaviour
     public void EndTurn()
     {
         GridSystem.Instance.ResetMovemap();
+        AvailableRangedTargets.Clear();
         TurnQueue.Add(_currentCharacter);
         OnTurnEnd.Invoke();
         StartNextTurn();
@@ -224,5 +257,43 @@ public class GameController : MonoBehaviour
     {
         Character character = FindCharacter(characterbattleId);
         TurnPanelControllerRef.UpdateTurnIcon(characterbattleId, character.Properties);
+    }
+
+    public void DefineAvailableRangedTargets(Character character)
+    {
+        AvailableRangedTargets.Clear();
+
+        //go through all characters on map and define if they are visible from character's point
+        string oppositeFraction;
+        if (character.tag == "Ally")
+            oppositeFraction = "Enemy";
+        else
+            oppositeFraction = "Ally";
+        LayerMask layerMask = LayerMask.GetMask(oppositeFraction, "MapEdges");
+
+        foreach(var otherCharacter in CharacterList)
+        {
+            //ignore ally and dead characters and characters that stand next to current character
+            if (!otherCharacter.CompareTag(character.tag) && otherCharacter.Properties.CurrentHealth >= 0)
+            {
+                float distanceBetweenCharacters = (otherCharacter.transform.position - character.transform.position).magnitude;
+                RaycastHit[] hits = Physics.RaycastAll(character.transform.position, otherCharacter.transform.position, distanceBetweenCharacters, layerMask);
+
+                //we need to define if edge was hit earlier than target character
+                bool found = false;
+                foreach(var hit in hits)
+                {
+                    //MapEdges layer no = 8
+                    if (hit.transform.gameObject.layer == 8)
+                    {
+                        found = true;
+                    }
+                }
+
+                if (!found)
+                    AvailableRangedTargets.Add(otherCharacter.Coords);
+            }
+        }
+
     }
 }

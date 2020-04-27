@@ -5,6 +5,15 @@ using UnityEngine.Tilemaps;
 using UnityEngine.Events;
 using System;
 
+
+public enum CharacterClass
+{
+    Warrior = 0,
+    Archer = 1,
+    Healer = 2,
+    Mage = 3,
+}
+
 [Serializable]
 public struct CharacterProperties
 {
@@ -14,6 +23,9 @@ public struct CharacterProperties
     public int Health;
     public int CurrentHealth;
     public int Speed;
+    public int BaseDamage;
+    public CharacterClass Class;
+
 }
 
 public class UnityIntEvent: UnityEvent<int>
@@ -36,6 +48,7 @@ public class Character : MonoBehaviour
 
     private Rigidbody2D _rb2d;
     private bool _isMoving;
+    private Character _attackedCharacter;
 
     public UnityEvent OnMoveEnded;
     public UnityIntEvent OnDamageTaken;
@@ -56,7 +69,7 @@ public class Character : MonoBehaviour
     {
         if (_isMoving)
         {
-            Vector3 targetWorldCoords = GridSystem.Instance.CurrentTilemap.GetCellCenterWorld(_targetCoords);
+            Vector3 targetWorldCoords = GridSystem.Instance.PathfindingMap.GetCellCenterWorld(_targetCoords);
             Vector3 rotation = (targetWorldCoords - _rb2d.transform.position).normalized;
             float distance = (targetWorldCoords - _rb2d.transform.position).magnitude;
             Vector3 newWorldCoords = _rb2d.transform.position + rotation * Properties.Speed * Time.fixedDeltaTime;
@@ -67,15 +80,7 @@ public class Character : MonoBehaviour
             }
 
             //set new tilemap coordinations
-            Vector3Int newCoords = GridSystem.Instance.GetTilemapCoordsFromWorld(GridSystem.Instance.CurrentTilemap, newWorldCoords);
-            if (Coords != newCoords)
-            {
-                Debug.Log($"{gameObject.name} Old Coords: ({Coords.x},{Coords.y})");
-                Debug.Log($"{gameObject.name} New Coords: ({newCoords.x},{newCoords.y})");
-                Debug.Log($"{gameObject.name} Distance: {distance}");
-                Coords = newCoords;
-            }
-            //Debug.Log($"New coords: ({Coords.x},{Coords.y})");
+            Coords = GridSystem.Instance.GetTilemapCoordsFromWorld(GridSystem.Instance.PathfindingMap, newWorldCoords);
             _rb2d.transform.position = newWorldCoords;
 
             //check end of moving 
@@ -91,20 +96,33 @@ public class Character : MonoBehaviour
                 {
                     _targetCoords = TargetPath[0];
                     TargetPath.RemoveAt(0);
+                    if (_attackedCharacter != null && TargetPath.Count == 0)
+                    {
+                        _isMoving = false;
+                        GridSystem.Instance.AddCharacterToNode(Coords, this);
+                        StartCoroutine(AnimateAttack());
+                    }
                 }
             }
         }
     }
 
-    public void Move(List<Vector3Int> path)
+    public void Move(List<Vector3Int> path, Character attackedCharacter = null)
     {
-        //Release current tile
-        bool deb = GridSystem.Instance.RemoveCharacterFromNode(Coords, this);
-        Debug.Log($"Remove from node: {deb}");
+        _attackedCharacter = attackedCharacter;
         TargetPath = path;
         _targetCoords = TargetPath[0];
         TargetPath.RemoveAt(0);
-        _isMoving = true;
+        if (TargetPath.Count == 0 && attackedCharacter != null)
+        {
+            //attacking near enemy
+            StartCoroutine(AnimateAttack());
+        }
+        else
+        {
+            GridSystem.Instance.RemoveCharacterFromNode(Coords, this);
+            _isMoving = true;
+        }
     }
 
     //Stop movement
@@ -113,7 +131,6 @@ public class Character : MonoBehaviour
     {
         TargetPath.Clear();
     }
-
 
     public void TakeDamage(int damage)
     {
@@ -130,7 +147,49 @@ public class Character : MonoBehaviour
     }
     */
     }
+
+    public IEnumerator AnimateAttack()
+    {
+        float curTime = 0;
+        bool end = false;
+        int moveStatus = 0;
+
+        Vector3 startWorldsCoords = transform.position;
+        Vector3 targetWorldCoords = _attackedCharacter.transform.position;
+
+        //move forward
+        while (!end)
+        {
+            curTime += Time.deltaTime;
+            if (curTime > 0.5f)
+            {
+                curTime = 0.5f;
+                end = true;
+                ++moveStatus;
+            }
+
+            float x = Mathf.Lerp(startWorldsCoords.x, targetWorldCoords.x, curTime / 0.5f);
+            float y = Mathf.Lerp(startWorldsCoords.y, targetWorldCoords.y, curTime / 0.5f);
+            transform.position = new Vector3(x, y, startWorldsCoords.z);
+            yield return null;
+
+            if (moveStatus == 1)
+            {
+                _attackedCharacter.TakeDamage(Properties.BaseDamage);
+                targetWorldCoords = startWorldsCoords;
+                startWorldsCoords = transform.position;
+                ++moveStatus;
+                end = false;
+                curTime = 0f;
+            }
+        }
+
+        _attackedCharacter = null;
+        OnMoveEnded.Invoke();
+    }
 }
+
+
 
 /*
 private IEnumerator DamageAnimation()

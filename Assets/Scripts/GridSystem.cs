@@ -8,7 +8,7 @@ public class GridSystem : MonoBehaviour
 {
     public static GridSystem Instance;
     public Camera CurrentCamera;
-    public Tilemap CurrentTilemap;
+    public Tilemap PathfindingMap;
 
     private PathfindingGraph _graph;
 
@@ -18,17 +18,13 @@ public class GridSystem : MonoBehaviour
     public Tile AllyTile;
     public Tile EnemyTile;
 
-    private List<Vector3Int> _moveMap;
-    private List<Vector3Int> _attackMap;
+    private List<Vector3Int> _moveMapCoords;
+    private List<Vector3Int> _attackMapCoords;
 
     private void Awake()
     {
-        if (Instance != null)
-        {
-            Debug.LogError("GridSystem object already exists");
-        }
-        else
-        {
+        if (Instance == null)
+        { 
             Instance = this;
         }
         InitializeGraph();
@@ -37,10 +33,12 @@ public class GridSystem : MonoBehaviour
 
     private void Start()
     {
+        /*
         Debug.Log($"Tilemap data:\n ");
-        Debug.Log($"Bounds: ({CurrentTilemap.cellBounds.x}, {CurrentTilemap.cellBounds.x})\n");
-        Debug.Log($"Origin: ({CurrentTilemap.origin.x}, {CurrentTilemap.origin.x})\n");
-        Debug.Log($"Size : {CurrentTilemap.size})");
+        Debug.Log($"Bounds: ({PathfindingMap.cellBounds.x}, {PathfindingMap.cellBounds.x})\n");
+        Debug.Log($"Origin: ({PathfindingMap.origin.x}, {PathfindingMap.origin.x})\n");
+        Debug.Log($"Size : {PathfindingMap.size})");
+        */
     }
 
     private void Update()
@@ -121,7 +119,7 @@ public class GridSystem : MonoBehaviour
 
     private void PrintMoveMap()
     {
-        foreach (var tilePosition in _moveMap)
+        foreach (var tilePosition in _moveMapCoords)
         {
             Node node = _graph.NodeGraph[_graph.CreateNodeKeyFromCoordinates(tilePosition.x, tilePosition.y)];
             if (node.GameStatus == Node.TileGameStatus.Empty)
@@ -137,24 +135,31 @@ public class GridSystem : MonoBehaviour
     {
         Node.TileGameStatus fraction;
         fraction = GetTileStatusFromCharacter(character);
-        _moveMap = GetMoveMap(fraction, character.Properties.Speed, character.Coords);
+        _moveMapCoords = GetMoveMap(fraction, character.Properties.Speed, character.Coords);
         PrintMoveMap();
     }
 
     public bool IsMovementEnable(Vector3Int targetPosition)
     {
-        if (_moveMap.IndexOf(targetPosition) != -1)
+        if (_moveMapCoords.IndexOf(targetPosition) != -1)
             return true;
         return false;
     }
 
     public void ResetMovemap()
     {
-        _moveMap.Clear();
+        _moveMapCoords.Clear();
         Movemap.ClearAllTiles();
         _graph.RestoreProcessStatus();
     }
 
+    public void PrintMovemapTiles(List<Vector3Int> coords, Tile printTile)
+    {
+        foreach(var coord in coords)
+        {
+            Movemap.SetTile(coord, printTile);
+        }
+    }
 
     /*
      * Graph section
@@ -162,10 +167,12 @@ public class GridSystem : MonoBehaviour
     public void InitializeGraph()
     {
         _graph = new PathfindingGraph();
-        CurrentTilemap.CompressBounds();
-        foreach(Vector3Int pos in CurrentTilemap.cellBounds.allPositionsWithin)
+        PathfindingMap.CompressBounds();
+
+        //analyze pathfinding map and build pathfinding graph
+        foreach(Vector3Int pos in PathfindingMap.cellBounds.allPositionsWithin)
         {
-            BattleTile tile = CurrentTilemap.GetTile<BattleTile>(pos);
+            BattleTile tile = PathfindingMap.GetTile<BattleTile>(pos);
             if (tile != null)
             {
                 Node centralTileNode;
@@ -193,7 +200,7 @@ public class GridSystem : MonoBehaviour
                     for (int i = 0; i < 4; ++i)
                     {
                         Vector3Int currentTileLocation = pos + offsets[i];
-                        BattleTile offsetTile = CurrentTilemap.GetTile<BattleTile>(currentTileLocation);
+                        BattleTile offsetTile = PathfindingMap.GetTile<BattleTile>(currentTileLocation);
                         if (offsetTile != null)
                         {
                             Node offsetTileNode;
@@ -216,7 +223,7 @@ public class GridSystem : MonoBehaviour
 
                             if (offsetTileNode.GameStatus == Node.TileGameStatus.Empty)
                             {
-                                centralTileNode.AddConnection(1f, offsetTileNode);
+                                centralTileNode.AddConnection(offsetTileNode);
                             }
                         }
                     }
@@ -232,7 +239,7 @@ public class GridSystem : MonoBehaviour
 
     public void PrintTileInfo(Vector3Int cellPosition)
     {
-        BattleTile tile = CurrentTilemap.GetTile(cellPosition) as BattleTile;
+        BattleTile tile = PathfindingMap.GetTile(cellPosition) as BattleTile;
         if (tile != null)
         {
             Debug.Log($"Tile at position ({cellPosition.x}, {cellPosition.y}) exists\n Is blocked: {tile.IsBlocked}");
@@ -260,25 +267,28 @@ public class GridSystem : MonoBehaviour
         Vector3 worldPosition = ray.GetPoint(-ray.origin.z / ray.direction.z);
         return tilemap.WorldToCell(worldPosition);
     }
-    
 
+    public Vector3 GetWorldCoordsFromTilemap(Tilemap tilemap, Vector3Int tilemapCoords)
+    {
+        return tilemap.CellToWorld(tilemapCoords);
+    }
 
     //Uses for initial character registration 
     public void DefineCharacter(Character character)
     {
-        character.Coords = GetTilemapCoordsFromWorld(CurrentTilemap, character.transform.position);
+        character.Coords = GetTilemapCoordsFromWorld(PathfindingMap, character.transform.position);
         AddCharacterToNode(character.Coords, character);
     }
 
     public void DefineEffect(EffectTile effect)
     {
-        Vector3Int coords = GetTilemapCoordsFromWorld(CurrentTilemap, effect.gameObject.transform.position);
+        Vector3Int coords = GetTilemapCoordsFromWorld(PathfindingMap, effect.gameObject.transform.position);
         AddEffectToNode(coords, effect);
     }
 
     public void RemoveEffect(EffectTile effect)
     {
-        Vector3Int coords = GetTilemapCoordsFromWorld(CurrentTilemap, effect.transform.position);
+        Vector3Int coords = GetTilemapCoordsFromWorld(PathfindingMap, effect.transform.position);
         RemoveEffectFromNode(coords, effect);
     }
 
@@ -349,7 +359,7 @@ public class GridSystem : MonoBehaviour
             {
                 Character oldCharacter;
                 bool ok = gameobject.TryGetComponent<Character>(out oldCharacter);
-                if (ok)
+                if (ok && oldCharacter == character)
                 {
                     node.ObjectsOnTile.Remove(gameObject);
                     node.GameStatus = Node.TileGameStatus.Empty;
@@ -399,13 +409,19 @@ public class GridSystem : MonoBehaviour
                     currentNode = node;
             }
 
-            //if reach goal - stop searching and start build path
+            //if found node is goal node then stop searching and start build path
             if (currentNode == end)
                 break;
 
             foreach (var connection in currentNode.Connections)
             {
                 Node endNode = connection.EndNode;
+
+                //Characters cant go through another characters
+                //So we need to ignore nodes that taken by ally or enemy (if this is not goal node)
+                if ((endNode.GameStatus == Node.TileGameStatus.Ally || endNode.GameStatus == Node.TileGameStatus.Enemy) && endNode != end)
+                    continue;
+
                 //calculate the cost of movement
                 //this cost depend on tile and character properties
                 float cost = currentNode.CostSoFar + _basicCost;
@@ -451,12 +467,6 @@ public class GridSystem : MonoBehaviour
                 }
 
                 float heuristic;
-
-                //Characters cant go through another characters
-                //So we need to ignore nodes that taken by ally or enemy (if this is not goal node)
-                if ((endNode.GameStatus == Node.TileGameStatus.Ally || endNode.GameStatus == Node.TileGameStatus.Enemy) && endNode != end)
-                    continue;
-
                 if (endNode.ProcessStatus == Node.NodeProcessStatus.InClosedList)
                 {
                     if (endNode.CostSoFar < cost)
@@ -485,7 +495,7 @@ public class GridSystem : MonoBehaviour
             currentNode.ProcessStatus = Node.NodeProcessStatus.InClosedList;
         }
 
-        //if goal node did not found
+        //if goal node wasn't found
         if (currentNode != end)
             return null;
         //else build path
@@ -498,8 +508,6 @@ public class GridSystem : MonoBehaviour
         path.Reverse();
         return path;
     }
-
-
 
     public List<Node> BuildPath(Vector3Int start, Vector3Int end, Character character)
     {
@@ -525,14 +533,20 @@ public class GridSystem : MonoBehaviour
         return coordPath;
     }
 
-
     public Node.TileGameStatus GetTileStatusFromCharacter(Character character)
     {
-        if (character.gameObject.CompareTag("Player"))
+        if (character.gameObject.CompareTag("Ally"))
             return Node.TileGameStatus.Ally;
         else if (character.gameObject.CompareTag("Enemy"))
             return Node.TileGameStatus.Enemy;
         else
             return Node.TileGameStatus.Empty;
     }
+
+
+    public Character GetCharacterFromCoords(Vector3Int coords)
+    {
+        return _graph.GetNode(coords).GetCharacter();
+    }
+
 }
