@@ -93,5 +93,30 @@ public class TurnPanelController : MonoBehaviour
         CharacterProperties characterProperties = GameController.Instance.FindCharacter(characterBattleId).Properties;
         CharacterPanelRef.ShowPanel(characterProperties);
     }
+
+    public void RemoveTurnIcon(int characterBattleId)
+    {
+        //character's turn
+        if (CurrentTurnIcon.ChainedCharacterBattleId == characterBattleId && _lastTurnIcon != null)
+        {
+            Destroy(_lastTurnIcon.gameObject);
+            _lastTurnIcon = null;
+        }
+        else
+        {
+            //find turn icon
+            TurnIcon targetTurnIcon = null;
+            int i;
+            for (i = 0; i < TurnIcons.Count; ++i)
+                if (TurnIcons[i].ChainedCharacterBattleId == characterBattleId)
+                {
+                    targetTurnIcon = TurnIcons[i];
+                    break;
+                }
+            TurnIcons.RemoveAt(i);
+            targetTurnIcon.gameObject.SetActive(false);
+            Destroy(targetTurnIcon.gameObject);
+        }
+    }
 }
 

@@ -83,7 +83,7 @@ public class GameController : MonoBehaviour
                     {
                         Character targetCharacter = GridSystem.Instance.GetCharacterFromCoords(cellPosition);
                         //animations and so on)
-                        targetCharacter.TakeDamage(_currentCharacter.Properties.RangedDamage);
+                        _currentCharacter.AttackAtRange(targetCharacter);
                         EndTurn();
                     }
                     else
@@ -239,6 +239,7 @@ public class GameController : MonoBehaviour
             CharacterList.Add(character);
             character.OnMoveEnded.AddListener(EndTurn);
             character.OnDamageTaken.AddListener(OnCharacterTakeDamage);
+            character.OnDie.AddListener(OnCharacterDie);
         }
     }
 
@@ -257,10 +258,22 @@ public class GameController : MonoBehaviour
         properties = _currentCharacter.Properties;
     }
 
-    public void OnCharacterTakeDamage(int characterbattleId)
+    public void OnCharacterTakeDamage(int characterBattleId)
     {
-        Character character = FindCharacter(characterbattleId);
-        TurnPanelControllerRef.UpdateTurnIcon(characterbattleId, character.Properties);
+        Character character = FindCharacter(characterBattleId);
+        TurnPanelControllerRef.UpdateTurnIcon(characterBattleId, character.Properties);
+    }
+
+    public void OnCharacterDie(int characterBattleId)
+    {
+        Character character = FindCharacter(characterBattleId);
+        TurnPanelControllerRef.RemoveTurnIcon(characterBattleId);
+        TurnQueue.RemoveAll(delegate (Character otherCharacter)
+                            {
+                                return otherCharacter == character;
+                            });
+        //check end game
+
     }
 
     public void DefineAvailableRangedTargets(Character character)
@@ -282,20 +295,29 @@ public class GameController : MonoBehaviour
 
         foreach(var otherCharacter in CharacterList)
         {
-            //ignore ally and dead characters and characters that stand next to current character
+            //ignore ally and dead characters
             if (!otherCharacter.CompareTag(character.tag) && otherCharacter.Properties.CurrentHealth >= 0)
             {
+                Vector3 direction = (otherCharacter.transform.position - character.transform.position).normalized;
                 float distanceBetweenCharacters = (otherCharacter.transform.position - character.transform.position).magnitude;
-                RaycastHit[] hits = Physics.RaycastAll(character.transform.position, otherCharacter.transform.position, distanceBetweenCharacters, layerMask);
 
+                RaycastHit2D[] hits2D = Physics2D.RaycastAll(new Vector2(character.transform.position.x, character.transform.position.y),
+                                     new Vector2(direction.x, direction.y),
+                                     distanceBetweenCharacters,
+                                     layerMask);
+
+                //RaycastHit[] hits = Physics.RaycastAll(character.transform.position, direction, distanceBetweenCharacters, layerMask);
+
+                //List<RaycastHit> hitsList = new List<RaycastHit>(hits);
                 //we need to define if edge was hit earlier than target character
                 bool found = false;
-                foreach(var hit in hits)
+                foreach(var hit in hits2D)
                 {
                     //MapEdges layer no = 8
                     if (hit.transform.gameObject.layer == 8)
                     {
                         found = true;
+                        break;
                     }
                 }
 

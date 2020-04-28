@@ -17,17 +17,23 @@ public enum CharacterClass
 [Serializable]
 public struct CharacterProperties
 {
+    //Main properties
     public string Name;
+    public CharacterClass Class;
     public int Level;
     public Sprite Icon;
     public int Health;
     public int CurrentHealth;
     public int Speed;
+
+    //Attack properties
     public int RangedDamage;
     public int MeleeDamage;
-    public CharacterClass Class;
-
+    public int MaxMissiles;
+    public int CurrentMissiles;
 }
+
+
 
 public class UnityIntEvent: UnityEvent<int>
 {
@@ -53,7 +59,7 @@ public class Character : MonoBehaviour
 
     public UnityEvent OnMoveEnded;
     public UnityIntEvent OnDamageTaken;
-    public UnityEvent OnDie;
+    public UnityIntEvent OnDie;
 
     private void Start()
     {
@@ -61,6 +67,7 @@ public class Character : MonoBehaviour
         _rb2d = GetComponent<Rigidbody2D>();
 
         OnDamageTaken = new UnityIntEvent();
+        OnDie = new UnityIntEvent();
         //register in gameController
         GameController.Instance.RegisterCharacter(this);
         GridSystem.Instance.DefineCharacter(this);
@@ -101,7 +108,7 @@ public class Character : MonoBehaviour
                     {
                         _isMoving = false;
                         GridSystem.Instance.AddCharacterToNode(Coords, this);
-                        StartCoroutine(AnimateAttack());
+                        StartCoroutine(AnimateMeleeAttack());
                     }
                 }
             }
@@ -117,7 +124,7 @@ public class Character : MonoBehaviour
         if (TargetPath.Count == 0 && attackedCharacter != null)
         {
             //attacking near enemy
-            StartCoroutine(AnimateAttack());
+            StartCoroutine(AnimateMeleeAttack());
         }
         else
         {
@@ -137,19 +144,16 @@ public class Character : MonoBehaviour
     {
         Properties.CurrentHealth -= damage;
         OnDamageTaken.Invoke(BattleId);
-        /*
-        //UpdateHPBar();
-        //StartCoroutine(DamageAnimation());
-    /if (Health <= 0)
-    {
-        gameObject.SetActive(false);
-        GridSystem.Instance.ReleaseTile(Coords);
-        OnDie.Invoke();
-    }
-    */
+
+        if (Properties.CurrentHealth <= 0)
+        {
+            gameObject.SetActive(false);
+            GridSystem.Instance.RemoveCharacterFromNode(Coords, this);
+            OnDie.Invoke(BattleId);
+        }
     }
 
-    public IEnumerator AnimateAttack()
+    public IEnumerator AnimateMeleeAttack()
     {
         
         float curTime = 0;
@@ -188,6 +192,12 @@ public class Character : MonoBehaviour
 
         _attackedCharacter = null;
         OnMoveEnded.Invoke();
+    }
+
+    public void AttackAtRange(Character attackedCharacter)
+    {
+        attackedCharacter.TakeDamage(Properties.RangedDamage);
+        --Properties.CurrentMissiles;
     }
 
     public static string GetStringClassName(CharacterClass characterClass)
