@@ -23,7 +23,8 @@ public struct CharacterProperties
     public int Health;
     public int CurrentHealth;
     public int Speed;
-    public int BaseDamage;
+    public int RangedDamage;
+    public int MeleeDamage;
     public CharacterClass Class;
 
 }
@@ -150,6 +151,7 @@ public class Character : MonoBehaviour
 
     public IEnumerator AnimateAttack()
     {
+        
         float curTime = 0;
         bool end = false;
         int moveStatus = 0;
@@ -175,7 +177,7 @@ public class Character : MonoBehaviour
 
             if (moveStatus == 1)
             {
-                _attackedCharacter.TakeDamage(Properties.BaseDamage);
+                _attackedCharacter.TakeDamage(Properties.MeleeDamage);
                 targetWorldCoords = startWorldsCoords;
                 startWorldsCoords = transform.position;
                 ++moveStatus;
@@ -186,6 +188,20 @@ public class Character : MonoBehaviour
 
         _attackedCharacter = null;
         OnMoveEnded.Invoke();
+    }
+
+    public static string GetStringClassName(CharacterClass characterClass)
+    {
+        string className;
+        if (characterClass == CharacterClass.Warrior)
+            className = "Warrior";
+        else if (characterClass == CharacterClass.Archer)
+            className = "Archer";
+        else if (characterClass == CharacterClass.Mage)
+            className = "Mage";
+        else //if (characterClass == CharacterClass.Healer)
+            className = "Healer";
+        return className;
     }
 }
 

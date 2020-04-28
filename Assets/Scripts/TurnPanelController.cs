@@ -14,11 +14,15 @@ public class TurnPanelController : MonoBehaviour
 
     public Text RoundText;
     public Text TurnText;
+
+    public CharacterPanel CharacterPanelRef;
     // Start is called before the first frame update
     void Start()
     {
         TurnIcons = new List<TurnIcon>();
         GameController.Instance.OnTurnStart.AddListener(OnTurnStart);
+
+        CurrentTurnIcon.OnTurnIconClick.AddListener(ProcessTurnIconClick);
     }
 
     // Update is called once per frame
@@ -33,6 +37,7 @@ public class TurnPanelController : MonoBehaviour
         TurnIcon turnIcon = gameObject.GetComponent<TurnIcon>();
         turnIcon.SetCharacter(character.BattleId, properties);
         TurnIcons.Add(turnIcon);
+        turnIcon.OnTurnIconClick.AddListener(ProcessTurnIconClick);
     }
 
     public void OnTurnStart()
@@ -82,5 +87,11 @@ public class TurnPanelController : MonoBehaviour
 
     }
 
+    public void ProcessTurnIconClick(int characterBattleId)
+    {
+        //get character properties and set up panel
+        CharacterProperties characterProperties = GameController.Instance.FindCharacter(characterBattleId).Properties;
+        CharacterPanelRef.ShowPanel(characterProperties);
+    }
 }
 

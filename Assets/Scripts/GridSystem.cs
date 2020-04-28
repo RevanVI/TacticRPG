@@ -117,17 +117,17 @@ public class GridSystem : MonoBehaviour
         return map;
     }
 
-    private void PrintMoveMap()
+    private void PrintMoveMap(Node.TileGameStatus characterFraction)
     {
         foreach (var tilePosition in _moveMapCoords)
         {
             Node node = _graph.NodeGraph[_graph.CreateNodeKeyFromCoordinates(tilePosition.x, tilePosition.y)];
             if (node.GameStatus == Node.TileGameStatus.Empty)
                 Movemap.SetTile(tilePosition, MoveTile);
-            else if (node.GameStatus == Node.TileGameStatus.Enemy)
-                Movemap.SetTile(tilePosition, EnemyTile);
-            else if (node.GameStatus == Node.TileGameStatus.Ally)
+            else if (node.GameStatus == characterFraction)
                 Movemap.SetTile(tilePosition, AllyTile);
+            else
+                Movemap.SetTile(tilePosition, EnemyTile);
         }
     }
 
@@ -136,7 +136,7 @@ public class GridSystem : MonoBehaviour
         Node.TileGameStatus fraction;
         fraction = GetTileStatusFromCharacter(character);
         _moveMapCoords = GetMoveMap(fraction, character.Properties.Speed, character.Coords);
-        PrintMoveMap();
+        PrintMoveMap(fraction);
     }
 
     public bool IsMovementEnable(Vector3Int targetPosition)
@@ -263,7 +263,7 @@ public class GridSystem : MonoBehaviour
 
     public Vector3Int GetTilemapCoordsFromScreen(Tilemap tilemap, Vector3 screenCoords)
     {
-        Ray ray = CurrentCamera.ScreenPointToRay(Input.mousePosition);
+        Ray ray = CurrentCamera.ScreenPointToRay(screenCoords);
         Vector3 worldPosition = ray.GetPoint(-ray.origin.z / ray.direction.z);
         return tilemap.WorldToCell(worldPosition);
     }
@@ -272,6 +272,7 @@ public class GridSystem : MonoBehaviour
     {
         return tilemap.CellToWorld(tilemapCoords);
     }
+
 
     //Uses for initial character registration 
     public void DefineCharacter(Character character)
@@ -361,7 +362,7 @@ public class GridSystem : MonoBehaviour
                 bool ok = gameobject.TryGetComponent<Character>(out oldCharacter);
                 if (ok && oldCharacter == character)
                 {
-                    node.ObjectsOnTile.Remove(gameObject);
+                    node.ObjectsOnTile.Remove(character.gameObject);
                     node.GameStatus = Node.TileGameStatus.Empty;
                     return true;
                 }
@@ -546,7 +547,10 @@ public class GridSystem : MonoBehaviour
 
     public Character GetCharacterFromCoords(Vector3Int coords)
     {
-        return _graph.GetNode(coords).GetCharacter();
+        Node node = _graph.GetNode(coords);
+        if (node != null)
+            return node.GetCharacter();
+        return null;
     }
 
 }

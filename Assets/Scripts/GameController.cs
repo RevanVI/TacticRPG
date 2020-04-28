@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.EventSystems;
 
 public enum GameState
 {
@@ -69,48 +70,51 @@ public class GameController : MonoBehaviour
         _isUpdateStarted = true;
         if (Input.GetMouseButtonDown(0))
         {
-            Vector3Int cellPosition = GridSystem.Instance.GetTilemapCoordsFromScreen(GridSystem.Instance.PathfindingMap, Input.mousePosition);
-            GridSystem.Instance.PrintTileInfo(cellPosition);
-
-            if (State == GameState.PlayerTurn && !_isInputBlocked)
+            //check if player clicked on UI
+            if (!EventSystem.current.IsPointerOverGameObject())
             {
-                _isInputBlocked = true;
-
-                if (AvailableRangedTargets.IndexOf(cellPosition) != -1)
+                Vector3Int cellPosition = GridSystem.Instance.GetTilemapCoordsFromScreen(GridSystem.Instance.PathfindingMap, Input.mousePosition);
+                if (State == GameState.PlayerTurn && !_isInputBlocked)
                 {
-                    Character targetCharacter = GridSystem.Instance.GetCharacterFromCoords(cellPosition);
-                    //animations and so on)
-                    targetCharacter.TakeDamage(_currentCharacter.Properties.BaseDamage);
-                    EndTurn();
-                }
-                else
-                { 
-                    bool isMovementEnable = GridSystem.Instance.IsMovementEnable(cellPosition);
-                    if (isMovementEnable)
-                    {
-                        GridSystem.Instance.ResetMovemap();
-                        //Build path
-                        List<Node> path = GridSystem.Instance.BuildPath(_currentCharacter.Coords, cellPosition, _currentCharacter);
-                        GridSystem.Instance.PrintPath(path);
-                        List<Vector3Int> coordPath = GridSystem.Instance.ConvertFromGraphPath(path);
+                    GridSystem.Instance.PrintTileInfo(cellPosition);
+                    _isInputBlocked = true;
 
-                        //there is two options: this movements is melee attack or not
+                    if (AvailableRangedTargets.IndexOf(cellPosition) != -1)
+                    {
                         Character targetCharacter = GridSystem.Instance.GetCharacterFromCoords(cellPosition);
-                        if (targetCharacter == null)
-                        {
-                            //move
-                            _currentCharacter.Move(coordPath);
-                        }
-                        else
-                        {
-                            //attack
-                            _currentCharacter.Move(coordPath, targetCharacter);
-                        }
+                        //animations and so on)
+                        targetCharacter.TakeDamage(_currentCharacter.Properties.RangedDamage);
+                        EndTurn();
                     }
                     else
                     {
-                        Debug.Log("Cell out of move map");
-                        _isInputBlocked = false;
+                        bool isMovementEnable = GridSystem.Instance.IsMovementEnable(cellPosition);
+                        if (isMovementEnable)
+                        {
+                            GridSystem.Instance.ResetMovemap();
+                            //Build path
+                            List<Node> path = GridSystem.Instance.BuildPath(_currentCharacter.Coords, cellPosition, _currentCharacter);
+                            GridSystem.Instance.PrintPath(path);
+                            List<Vector3Int> coordPath = GridSystem.Instance.ConvertFromGraphPath(path);
+
+                            //there is two options: this movements is melee attack or not
+                            Character targetCharacter = GridSystem.Instance.GetCharacterFromCoords(cellPosition);
+                            if (targetCharacter == null)
+                            {
+                                //move
+                                _currentCharacter.Move(coordPath);
+                            }
+                            else
+                            {
+                                //attack
+                                _currentCharacter.Move(coordPath, targetCharacter);
+                            }
+                        }
+                        else
+                        {
+                            Debug.Log("Cell out of move map");
+                            _isInputBlocked = false;
+                        }
                     }
                 }
             }
@@ -263,6 +267,11 @@ public class GameController : MonoBehaviour
     {
         AvailableRangedTargets.Clear();
 
+        //character can't shoot when there is enemy nearby
+        bool isEnemyNearby = IsThereEnemyNearby(character);
+        if (isEnemyNearby)
+            return;
+
         //go through all characters on map and define if they are visible from character's point
         string oppositeFraction;
         if (character.tag == "Ally")
@@ -294,6 +303,22 @@ public class GameController : MonoBehaviour
                     AvailableRangedTargets.Add(otherCharacter.Coords);
             }
         }
+    }
 
+    public bool IsThereEnemyNearby(Character character)
+    {
+        //check all directions
+        Vector3Int[] offsets = { new Vector3Int(1, 0, 0), new Vector3Int(-1, 0, 0), new Vector3Int(0, 1, 0), new Vector3Int(0, -1, 0) };
+        int i;
+        for (i = 0; i < 4; ++i)
+        {
+            Character characterNearby = GridSystem.Instance.GetCharacterFromCoords(character.Coords + offsets[i]);
+            if (characterNearby != null && !characterNearby.CompareTag(character.tag))
+                break;
+        }
+
+        if (i < 4)
+            return true;
+        return false;
     }
 }

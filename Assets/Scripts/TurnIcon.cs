@@ -2,33 +2,33 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Events;
 
 public class TurnIcon : MonoBehaviour
 {
     public Image CharacterImage;
     public Text HPText;
     public int ChainedCharacterBattleId;
+    public UnityIntEvent OnTurnIconClick;
+
+    private void Start()
+    {
+        Button button = GetComponent<Button>();
+        button.onClick.AddListener(ResendButtonClick);
+
+        
+    }
+
 
     public TurnIcon()
     {
         ChainedCharacterBattleId = -1;
+        OnTurnIconClick = new UnityIntEvent();
     }
 
     public TurnIcon(int characterBattleId, CharacterProperties properties)
     {
         SetCharacter(characterBattleId, properties);
-    }
-
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
     }
 
     public void SetCharacter(int characterBattleId, CharacterProperties properties)
@@ -46,5 +46,10 @@ public class TurnIcon : MonoBehaviour
     public void SetHP(int currentHP, int maxHP)
     {
         HPText.text = $"HP: {currentHP} / {maxHP}";
+    }
+
+    private void ResendButtonClick()
+    {
+        OnTurnIconClick.Invoke(ChainedCharacterBattleId);
     }
 }
