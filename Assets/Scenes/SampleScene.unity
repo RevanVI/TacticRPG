@@ -6399,6 +6399,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: CharacterPanel
       objectReference: {fileID: 0}
+    - target: {fileID: 3203455890825313414, guid: 5bde4ca33191f824eb76342de34a693d,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 5bde4ca33191f824eb76342de34a693d, type: 3}
 --- !u!1001 &8744826375063819792

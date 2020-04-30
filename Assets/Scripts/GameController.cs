@@ -91,10 +91,14 @@ public class GameController : MonoBehaviour
             Vector2 relativeMousePosition = GridSystem.Instance.GetRelativePointPositionInTile(GridSystem.Instance.PathfindingMap,
                                                                                                cellPos,
                                                                                                worldPosition);
-
+            List<Vector3Int> nearAvailableTiles = GridSystem.Instance.GetNearMovemapTiles(cellPos);
+            
             float space = 0.25f;
 
-            //if ()
+            if (nearAvailableTiles.Count == 1)
+            {
+
+            }
         }
 
 

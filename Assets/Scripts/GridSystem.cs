@@ -46,7 +46,6 @@ public class GridSystem : MonoBehaviour
        
     }
 
-
     /*
      * Movemap section
      */
@@ -236,6 +235,19 @@ public class GridSystem : MonoBehaviour
         }
     }
 
+    public List<Vector3Int> GetNearMovemapTiles(Vector3Int coords)
+    {
+        Vector3Int[] offsets = { new Vector3Int(1, 0, 0), new Vector3Int(-1, 0, 0), new Vector3Int(0, 1, 0), new Vector3Int(0, -1, 0) };
+        List<Vector3Int> nearTiles = new List<Vector3Int>();
+        for (int i = 0; i < 4; ++i)
+        {
+            Vector3Int offsetTile = coords + offsets[i];
+            if (Movemap.GetTile(offsetTile) != null)
+                nearTiles.Add(offsetTile);
+        }
+        return nearTiles;
+    }
+
     /*
      * Graph section
      */
@@ -306,7 +318,6 @@ public class GridSystem : MonoBehaviour
             }
         }
     }
-
 
     /*
      * Tilemap section
@@ -461,7 +472,6 @@ public class GridSystem : MonoBehaviour
     {
         _graph.GetNode(coords).GameStatus = status;
     }
-
 
     /*
      * Pathfining section
@@ -629,7 +639,6 @@ public class GridSystem : MonoBehaviour
         else
             return Node.TileGameStatus.Empty;
     }
-
 
     public Character GetCharacterFromCoords(Vector3Int coords)
     {
