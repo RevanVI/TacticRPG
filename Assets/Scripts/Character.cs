@@ -213,6 +213,14 @@ public class Character : MonoBehaviour
             className = "Healer";
         return className;
     }
+
+    public string GetOppositeFraction()
+    {
+        if (tag == "Ally")
+            return "Enemy";
+        else 
+            return "Ally";
+    }
 }
 
 

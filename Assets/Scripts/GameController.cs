@@ -27,6 +27,7 @@ public class GameController : MonoBehaviour
     public List<Character> CharacterList;
     public EnemyController[] Enemies;
     public List<Vector3Int> AvailableRangedTargets;
+    public List<Vector3Int> AvailableMeleeTargets;
 
 
     private bool _isInputBlocked;
@@ -38,6 +39,9 @@ public class GameController : MonoBehaviour
     public int TurnCount;
 
     private int _battleIdCounter;
+
+    public Camera CurrentCamera;
+    public GameObject Pointer;
 
     private void Awake()
     {
@@ -68,8 +72,38 @@ public class GameController : MonoBehaviour
     void Update()
     {
         _isUpdateStarted = true;
+
+        //move pointer
+        Ray ray = CurrentCamera.ScreenPointToRay(Input.mousePosition);
+        Vector3 worldPosition = ray.GetPoint(-ray.origin.z / ray.direction.z);
+        Pointer.transform.position = worldPosition;
+
+        //check if cursor point on enemy
+        Vector3Int cellPos = GridSystem.Instance.GetTilemapCoordsFromWorld(GridSystem.Instance.PathfindingMap, worldPosition);
+        Character targetChar = GridSystem.Instance.GetCharacterFromCoords(cellPos);
+
+        if (targetChar != null && 
+            targetChar.tag == _currentCharacter.GetOppositeFraction() && 
+            (_currentCharacter.Properties.Class == CharacterClass.Warrior ||
+             _currentCharacter.Properties.Class == CharacterClass.Healer ||
+             IsCharactersStayNear(_currentCharacter, targetChar)))
+        {
+            Vector2 relativeMousePosition = GridSystem.Instance.GetRelativePointPositionInTile(GridSystem.Instance.PathfindingMap,
+                                                                                               cellPos,
+                                                                                               worldPosition);
+
+            float space = 0.25f;
+
+            //if ()
+        }
+
+
         if (Input.GetMouseButtonDown(0))
         {
+            Vector2 relativePos = GridSystem.Instance.GetRelativePointPositionInTile(GridSystem.Instance.PathfindingMap, cellPos, worldPosition);
+            //Debug.Log($"Mouse position: {worldPosition.x}, {worldPosition.y}");
+            //Debug.Log($"Relative position: {relativePos.x}, {relativePos.y}");
+
             //check if player clicked on UI
             if (!EventSystem.current.IsPointerOverGameObject())
             {
@@ -194,12 +228,13 @@ public class GameController : MonoBehaviour
         State = GameState.PlayerTurn;
         GridSystem.Instance.PrintCharacterMoveMap(_currentCharacter);
 
-        if (_currentCharacter.Properties.Class == CharacterClass.Archer || _currentCharacter.Properties.Class == CharacterClass.Mage)
+        if ((_currentCharacter.Properties.Class == CharacterClass.Archer || 
+            _currentCharacter.Properties.Class == CharacterClass.Mage) &&
+            !IsThereEnemyNearby(_currentCharacter))
         {
             DefineAvailableRangedTargets(_currentCharacter);
             GridSystem.Instance.PrintMovemapTiles(AvailableRangedTargets, GridSystem.Instance.EnemyTile);
         }
-
         _isInputBlocked = false;
     }
 
@@ -286,11 +321,7 @@ public class GameController : MonoBehaviour
             return;
 
         //go through all characters on map and define if they are visible from character's point
-        string oppositeFraction;
-        if (character.tag == "Ally")
-            oppositeFraction = "Enemy";
-        else
-            oppositeFraction = "Ally";
+        string oppositeFraction = character.GetOppositeFraction();
         LayerMask layerMask = LayerMask.GetMask(oppositeFraction, "MapEdges");
 
         foreach(var otherCharacter in CharacterList)
@@ -306,9 +337,6 @@ public class GameController : MonoBehaviour
                                      distanceBetweenCharacters,
                                      layerMask);
 
-                //RaycastHit[] hits = Physics.RaycastAll(character.transform.position, direction, distanceBetweenCharacters, layerMask);
-
-                //List<RaycastHit> hitsList = new List<RaycastHit>(hits);
                 //we need to define if edge was hit earlier than target character
                 bool found = false;
                 foreach(var hit in hits2D)
@@ -320,12 +348,57 @@ public class GameController : MonoBehaviour
                         break;
                     }
                 }
-
                 if (!found)
                     AvailableRangedTargets.Add(otherCharacter.Coords);
             }
         }
     }
+
+    //suppose that GridSystem 
+    public void DefineAvailableMeleeTargets(Character character)
+    {
+        AvailableRangedTargets.Clear();
+
+        //character can't shoot when there is enemy nearby
+        bool isEnemyNearby = IsThereEnemyNearby(character);
+        if (isEnemyNearby)
+            return;
+
+        //go through all characters on map and define if they are visible from character's point
+        string oppositeFraction = character.GetOppositeFraction();
+        LayerMask layerMask = LayerMask.GetMask(oppositeFraction, "MapEdges");
+
+        foreach (var otherCharacter in CharacterList)
+        {
+            //ignore ally and dead characters
+            if (!otherCharacter.CompareTag(character.tag) && otherCharacter.Properties.CurrentHealth >= 0)
+            {
+                Vector3 direction = (otherCharacter.transform.position - character.transform.position).normalized;
+                float distanceBetweenCharacters = (otherCharacter.transform.position - character.transform.position).magnitude;
+
+                RaycastHit2D[] hits2D = Physics2D.RaycastAll(new Vector2(character.transform.position.x, character.transform.position.y),
+                                     new Vector2(direction.x, direction.y),
+                                     distanceBetweenCharacters,
+                                     layerMask);
+
+                //we need to define if edge was hit earlier than target character
+                bool found = false;
+                foreach (var hit in hits2D)
+                {
+                    //MapEdges layer no = 8
+                    if (hit.transform.gameObject.layer == 8)
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found)
+                    AvailableRangedTargets.Add(otherCharacter.Coords);
+            }
+        }
+    }
+
+
 
     public bool IsThereEnemyNearby(Character character)
     {
@@ -340,6 +413,13 @@ public class GameController : MonoBehaviour
         }
 
         if (i < 4)
+            return true;
+        return false;
+    }
+
+    public bool IsCharactersStayNear(Character character1, Character character2)
+    {
+        if ((character1.Coords - character2.Coords).magnitude == 1)
             return true;
         return false;
     }

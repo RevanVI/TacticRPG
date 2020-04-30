@@ -51,7 +51,7 @@ public class GridSystem : MonoBehaviour
      * Movemap section
      */
 
-    public List<Vector3Int> GetMoveMap(Node.TileGameStatus fraction, int moveDistance, Vector3Int position)
+    public List<Vector3Int> GetMoveMap(int moveDistance, Vector3Int position)
     {
         List<Vector3Int> map = new List<Vector3Int>();
         List<Node> nodesToProcess = new List<Node>();
@@ -63,12 +63,6 @@ public class GridSystem : MonoBehaviour
         currentNode.ProcessStatus = Node.NodeProcessStatus.InOpenList;
         nodesToProcess.Add(currentNode);
 
-        Node.TileGameStatus oppositeFraction;
-        if (fraction == Node.TileGameStatus.Ally)
-            oppositeFraction = Node.TileGameStatus.Enemy;
-        else
-            oppositeFraction = Node.TileGameStatus.Ally;
-
         while(nodesToProcess.Count != 0)
         {
             currentNode = nodesToProcess[0];
@@ -76,18 +70,14 @@ public class GridSystem : MonoBehaviour
             {
                 Node endNode = connection.EndNode;
 
-                if ((endNode.ProcessStatus == Node.NodeProcessStatus.NotVisited ||
-                    endNode.ProcessValue < currentNode.ProcessValue - 1) && endNode.GameStatus != fraction)
+                if (endNode.ProcessStatus == Node.NodeProcessStatus.NotVisited ||
+                    endNode.ProcessValue < currentNode.ProcessValue - 1)
                 {
                     //first entry in open list and not taken by ally
                     if (endNode.ProcessStatus == Node.NodeProcessStatus.NotVisited)
                         map.Add(endNode.Coords);
 
-                    //hit to enemy ends turn
-                    if (endNode.GameStatus == oppositeFraction)
-                        endNode.ProcessValue = 0;
-                    else
-                        endNode.ProcessValue = currentNode.ProcessValue - 1;
+                    endNode.ProcessValue = currentNode.ProcessValue - 1;
 
                     //if node has been already waiting processing in open list then change order
                     if (endNode.ProcessStatus == Node.NodeProcessStatus.InOpenList)
@@ -117,9 +107,94 @@ public class GridSystem : MonoBehaviour
         return map;
     }
 
-    private void PrintMoveMap(Node.TileGameStatus characterFraction)
+    public List<Vector3Int> GetBattleMoveMap(Node.TileGameStatus fraction, int moveDistance, Vector3Int position)
     {
-        foreach (var tilePosition in _moveMapCoords)
+        List<Vector3Int> map = new List<Vector3Int>();
+        List<Node> nodesToProcess = new List<Node>();
+
+        Node currentNode = _graph.GetNode(position);
+        if (currentNode.GameStatus == Node.TileGameStatus.Block)
+            return map;
+        currentNode.ProcessValue = moveDistance;
+        currentNode.ProcessStatus = Node.NodeProcessStatus.InOpenList;
+        nodesToProcess.Add(currentNode);
+
+        Node.TileGameStatus oppositeFraction;
+        if (fraction == Node.TileGameStatus.Ally)
+            oppositeFraction = Node.TileGameStatus.Enemy;
+        else
+            oppositeFraction = Node.TileGameStatus.Ally;
+
+        while (nodesToProcess.Count != 0)
+        {
+            currentNode = nodesToProcess[0];
+            foreach (var connection in currentNode.Connections)
+            {
+                Node endNode = connection.EndNode;
+
+                if ((endNode.ProcessStatus == Node.NodeProcessStatus.NotVisited ||
+                    endNode.ProcessValue < currentNode.ProcessValue - 1) && endNode.GameStatus != fraction)
+                {
+                    //first entry in open list and not taken by ally
+                    if (endNode.ProcessStatus == Node.NodeProcessStatus.NotVisited)
+                        map.Add(endNode.Coords);
+
+                    //hit to enemy ends turn
+                    if (endNode.GameStatus == oppositeFraction)
+                    {
+                        endNode.ProcessValue = 0;
+                        //prevent checks on enemies beyond movemap
+                        endNode.ProcessStatus = Node.NodeProcessStatus.InClosedList;
+                    }
+                    else
+                        endNode.ProcessValue = currentNode.ProcessValue - 1;
+
+                    //if node has been already waiting processing in open list then change order
+                    if (endNode.ProcessStatus == Node.NodeProcessStatus.InOpenList)
+                    {
+                        nodesToProcess.Remove(endNode);
+                    }
+
+                    if (endNode.ProcessValue > 0)
+                    {
+                        int indexToInsert = nodesToProcess.FindLastIndex(delegate (Node node)
+                        {
+                            return node.ProcessValue >= endNode.ProcessValue;
+                        });
+                        nodesToProcess.Insert(indexToInsert, endNode);
+                        endNode.ProcessStatus = Node.NodeProcessStatus.InOpenList;
+                    }
+                    else
+                    {
+                        //check if enemy nearby
+                        //it can be beyond movemap on 1 turn or within movemap
+                        Vector3Int[] offsets = { new Vector3Int(1, 0, 0), new Vector3Int(-1, 0, 0), new Vector3Int(0, 1, 0), new Vector3Int(0, -1, 0) };
+                        for (int i = 0; i < 4; ++i)
+                        {
+                            Vector3Int offsetPosition = endNode.Coords + offsets[i];
+                            Node offsetNode = _graph.GetNode(offsetPosition);
+                            if (offsetNode != null &&
+                                offsetNode.ProcessStatus == Node.NodeProcessStatus.NotVisited &&
+                                offsetNode.GameStatus == oppositeFraction)
+                            {
+                                    map.Add(offsetNode.Coords);
+                                    offsetNode.ProcessStatus = Node.NodeProcessStatus.InClosedList;
+                                    offsetNode.ProcessValue = 0;
+                            }
+                        }
+                        endNode.ProcessStatus = Node.NodeProcessStatus.InClosedList;
+                    }
+                }
+            }
+            nodesToProcess.Remove(currentNode);
+            currentNode.ProcessStatus = Node.NodeProcessStatus.InClosedList;
+        }
+        return map;
+    }
+
+    private void PrintMoveMap(List<Vector3Int> movemapCoords, Node.TileGameStatus characterFraction)
+    {
+        foreach (var tilePosition in movemapCoords)
         {
             Node node = _graph.NodeGraph[_graph.CreateNodeKeyFromCoordinates(tilePosition.x, tilePosition.y)];
             if (node.GameStatus == Node.TileGameStatus.Empty)
@@ -135,8 +210,8 @@ public class GridSystem : MonoBehaviour
     {
         Node.TileGameStatus fraction;
         fraction = GetTileStatusFromCharacter(character);
-        _moveMapCoords = GetMoveMap(fraction, character.Properties.Speed, character.Coords);
-        PrintMoveMap(fraction);
+        _moveMapCoords = GetBattleMoveMap(fraction, character.Properties.Speed, character.Coords);
+        PrintMoveMap(_moveMapCoords, fraction);
     }
 
     public bool IsMovementEnable(Vector3Int targetPosition)
@@ -273,6 +348,17 @@ public class GridSystem : MonoBehaviour
         return tilemap.CellToWorld(tilemapCoords);
     }
 
+    public Vector2 GetRelativePointPositionInTile(Tilemap tilemap, Vector3Int cellCoords, Vector3 pointCoords)
+    {
+        Vector3 cellWorldCenter = tilemap.GetCellCenterWorld(cellCoords);
+        Vector3 cellSize = tilemap.cellSize;
+        //offset center to left bottom corner of tile
+        cellWorldCenter -= cellSize / 2;
+
+        float x = (pointCoords.x - cellWorldCenter.x) / cellSize.x;
+        float y = (pointCoords.y - cellWorldCenter.y) / cellSize.y;
+        return new Vector2(x, y);
+    }
 
     //Uses for initial character registration 
     public void DefineCharacter(Character character)
