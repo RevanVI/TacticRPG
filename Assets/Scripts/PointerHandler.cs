@@ -12,8 +12,9 @@ public class PointerHandler : MonoBehaviour
         Normal = 0,
         RightAttack = 1,
         BottomAttack = 2,
-        LeftAtack = 3,
-        TopAttack = 4
+        LeftAttack = 3,
+        TopAttack = 4,
+        RangeAttack = 5,
     }
     public List<Sprite> SpritesList = new List<Sprite>(5);
     public List<Color> ColorsList = new List<Color>(5);
@@ -36,5 +37,11 @@ public class PointerHandler : MonoBehaviour
     {
         //_spriteRenderer.sprite = SpritesList[(int)newStatus];
         _spriteRenderer.color = ColorsList[(int)newStatus];
+        _currentStatus = newStatus;
+    }
+
+    public PointerStatus GetStatus()
+    {
+        return _currentStatus;
     }
 }

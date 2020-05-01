@@ -19,7 +19,7 @@ public class GridSystem : MonoBehaviour
     public Tile EnemyTile;
 
     private List<Vector3Int> _moveMapCoords;
-    private List<Vector3Int> _attackMapCoords;
+    //private List<Vector3Int> _attackMapCoords;
 
     private void Awake()
     {
@@ -235,7 +235,7 @@ public class GridSystem : MonoBehaviour
         }
     }
 
-    public List<Vector3Int> GetNearMovemapTiles(Vector3Int coords)
+    public List<Vector3Int> GetNearMovemapTilesList(Vector3Int coords)
     {
         Vector3Int[] offsets = { new Vector3Int(1, 0, 0), new Vector3Int(-1, 0, 0), new Vector3Int(0, 1, 0), new Vector3Int(0, -1, 0) };
         List<Vector3Int> nearTiles = new List<Vector3Int>();
@@ -246,6 +246,17 @@ public class GridSystem : MonoBehaviour
                 nearTiles.Add(offsetTile);
         }
         return nearTiles;
+    }
+
+    public List<Vector3Int> GetTileCoordsFromMovemap(Node.TileGameStatus gameStatus)
+    {
+        List<Vector3Int> list = new List<Vector3Int>();
+        foreach (var coords in _moveMapCoords)
+        {
+            if (_graph.GetNode(coords).GameStatus == gameStatus)
+                list.Add(coords);
+        }
+        return list;
     }
 
     /*
@@ -317,6 +328,11 @@ public class GridSystem : MonoBehaviour
                 }
             }
         }
+    }
+
+    public Node GetNode(Vector3Int coords)
+    {
+        return _graph.GetNode(coords);
     }
 
     /*

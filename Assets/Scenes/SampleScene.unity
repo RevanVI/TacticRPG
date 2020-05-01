@@ -214,6 +214,16 @@ PrefabInstance:
       propertyPath: Properties.MeleeDamage
       value: 2
       objectReference: {fileID: 0}
+    - target: {fileID: 8744826376382252232, guid: 697d541291174e347b5b852f67a9630f,
+        type: 3}
+      propertyPath: Properties.MaxMissiles
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 8744826376382252232, guid: 697d541291174e347b5b852f67a9630f,
+        type: 3}
+      propertyPath: Properties.CurrentMissiles
+      value: 5
+      objectReference: {fileID: 0}
     - target: {fileID: 8744826376382252233, guid: 697d541291174e347b5b852f67a9630f,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -5927,7 +5937,7 @@ MonoBehaviour:
   RoundCount: 0
   TurnCount: 0
   CurrentCamera: {fileID: 519420031}
-  Pointer: {fileID: 2115731141}
+  IngamePointer: {fileID: 2115731144}
 --- !u!4 &1951200652
 Transform:
   m_ObjectHideFlags: 0
@@ -6275,8 +6285,9 @@ MonoBehaviour:
   - {r: 1, g: 1, b: 1, a: 1}
   - {r: 1, g: 0, b: 0, a: 1}
   - {r: 0.021979332, g: 0, b: 1, a: 1}
-  - {r: 1, g: 0.99106956, b: 0, a: 1}
-  - {r: 0.015300989, g: 1, b: 0, a: 1}
+  - {r: 1, g: 0, b: 0.72107124, a: 1}
+  - {r: 1, g: 0.5280086, b: 0, a: 1}
+  - {r: 0, g: 0, b: 0, a: 1}
 --- !u!1001 &5646174541468423224
 PrefabInstance:
   m_ObjectHideFlags: 0

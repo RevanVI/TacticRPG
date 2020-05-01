@@ -41,7 +41,14 @@ public class GameController : MonoBehaviour
     private int _battleIdCounter;
 
     public Camera CurrentCamera;
-    public GameObject Pointer;
+    public PointerHandler IngamePointer;
+    /*
+     * 0 - not needed
+     * 1 - check ally characters
+     * 2 - check enemy characters
+     */
+    private string _isEndgameCheckNeeded = "";
+
 
     private void Awake()
     {
@@ -76,84 +83,130 @@ public class GameController : MonoBehaviour
         //move pointer
         Ray ray = CurrentCamera.ScreenPointToRay(Input.mousePosition);
         Vector3 worldPosition = ray.GetPoint(-ray.origin.z / ray.direction.z);
-        Pointer.transform.position = worldPosition;
+        IngamePointer.transform.position = worldPosition;
 
         //check if cursor point on enemy
-        Vector3Int cellPos = GridSystem.Instance.GetTilemapCoordsFromWorld(GridSystem.Instance.PathfindingMap, worldPosition);
-        Character targetChar = GridSystem.Instance.GetCharacterFromCoords(cellPos);
+        Vector3Int tilePosition = GridSystem.Instance.GetTilemapCoordsFromWorld(GridSystem.Instance.PathfindingMap, worldPosition);
+        Character targetCharacter = GridSystem.Instance.GetCharacterFromCoords(tilePosition);
 
-        if (targetChar != null && 
-            targetChar.tag == _currentCharacter.GetOppositeFraction() && 
-            (_currentCharacter.Properties.Class == CharacterClass.Warrior ||
-             _currentCharacter.Properties.Class == CharacterClass.Healer ||
-             IsCharactersStayNear(_currentCharacter, targetChar)))
+        if (targetCharacter != null &&
+            targetCharacter.tag == _currentCharacter.GetOppositeFraction())
         {
-            Vector2 relativeMousePosition = GridSystem.Instance.GetRelativePointPositionInTile(GridSystem.Instance.PathfindingMap,
-                                                                                               cellPos,
-                                                                                               worldPosition);
-            List<Vector3Int> nearAvailableTiles = GridSystem.Instance.GetNearMovemapTiles(cellPos);
-            
-            float space = 0.25f;
-
-            if (nearAvailableTiles.Count == 1)
+            //cursor in melee attack
+            if (AvailableMeleeTargets.Contains(tilePosition) &&
+                (_currentCharacter.Properties.Class == CharacterClass.Warrior ||
+                 _currentCharacter.Properties.Class == CharacterClass.Healer ||
+                 AvailableRangedTargets.Count == 0 || //enemy nearby or no missiles 
+                 !AvailableRangedTargets.Contains(tilePosition)))
             {
+                Vector2 relativeMousePosition = GridSystem.Instance.GetRelativePointPositionInTile(GridSystem.Instance.PathfindingMap,
+                                                                                                   tilePosition,
+                                                                                                   worldPosition);
+                List<Vector3Int> nearAvailableTiles = GridSystem.Instance.GetNearMovemapTilesList(tilePosition);
 
+                //movemap doesn't returns tile there character stays, but current character can stay near enemy
+                //so need to check this option
+                if (IsCharactersStayNear(_currentCharacter, targetCharacter))
+                    nearAvailableTiles.Add(_currentCharacter.Coords);
+
+                List<PointerHandler.PointerStatus> directionsList = new List<PointerHandler.PointerStatus>();
+                foreach (var nearTileCoords in nearAvailableTiles)
+                {
+                    Vector3Int offset = tilePosition - nearTileCoords;
+                    if (offset.x < 0)
+                        directionsList.Add(PointerHandler.PointerStatus.RightAttack);
+                    else if (offset.x > 0)
+                        directionsList.Add(PointerHandler.PointerStatus.LeftAttack);
+                    else if (offset.y < 0)
+                        directionsList.Add(PointerHandler.PointerStatus.TopAttack);
+                    else
+                        directionsList.Add(PointerHandler.PointerStatus.BottomAttack);
+                }
+
+                PointerHandler.PointerStatus defaultStatus = directionsList[0];
+                float space = 0.25f;
+
+                if (nearAvailableTiles.Count == 1)
+                {
+                    IngamePointer.SetSprite(directionsList[0]);
+                }
+                else
+                {
+                    //check all directions from right to top clockwise
+                    if (relativeMousePosition.x > (1 - space) && directionsList.Contains(PointerHandler.PointerStatus.RightAttack))
+                        IngamePointer.SetSprite(PointerHandler.PointerStatus.RightAttack);
+                    else if (relativeMousePosition.y < space && directionsList.Contains(PointerHandler.PointerStatus.BottomAttack))
+                        IngamePointer.SetSprite(PointerHandler.PointerStatus.BottomAttack);
+                    else if (relativeMousePosition.x < space && directionsList.Contains(PointerHandler.PointerStatus.LeftAttack))
+                        IngamePointer.SetSprite(PointerHandler.PointerStatus.LeftAttack);
+                    else if (relativeMousePosition.y > (1 - space) && directionsList.Contains(PointerHandler.PointerStatus.TopAttack))
+                        IngamePointer.SetSprite(PointerHandler.PointerStatus.TopAttack);
+                    else
+                        IngamePointer.SetSprite(defaultStatus);
+                }
+            }
+            //cursor in range attack
+            else if ((_currentCharacter.Properties.Class == CharacterClass.Archer ||
+                      _currentCharacter.Properties.Class == CharacterClass.Mage) &&
+                      AvailableRangedTargets.IndexOf(tilePosition) != -1)
+            {
+                IngamePointer.SetSprite(PointerHandler.PointerStatus.RangeAttack);
             }
         }
+        else
+            IngamePointer.SetSprite(PointerHandler.PointerStatus.Normal);
 
 
-        if (Input.GetMouseButtonDown(0))
+        if (Input.GetMouseButtonDown(0) && !EventSystem.current.IsPointerOverGameObject())
         {
-            Vector2 relativePos = GridSystem.Instance.GetRelativePointPositionInTile(GridSystem.Instance.PathfindingMap, cellPos, worldPosition);
-            //Debug.Log($"Mouse position: {worldPosition.x}, {worldPosition.y}");
-            //Debug.Log($"Relative position: {relativePos.x}, {relativePos.y}");
-
-            //check if player clicked on UI
-            if (!EventSystem.current.IsPointerOverGameObject())
+            if (State == GameState.PlayerTurn && !_isInputBlocked)
             {
-                Vector3Int cellPosition = GridSystem.Instance.GetTilemapCoordsFromScreen(GridSystem.Instance.PathfindingMap, Input.mousePosition);
-                if (State == GameState.PlayerTurn && !_isInputBlocked)
-                {
-                    GridSystem.Instance.PrintTileInfo(cellPosition);
-                    _isInputBlocked = true;
+                //GridSystem.Instance.PrintTileInfo(cellPosition);
+                _isInputBlocked = true;
 
-                    if (AvailableRangedTargets.IndexOf(cellPosition) != -1)
+                //in updating pointer we have already calculate all data 
+                PointerHandler.PointerStatus pointerStatus = IngamePointer.GetStatus();
+
+                if (pointerStatus == PointerHandler.PointerStatus.RangeAttack)
+                {
+                    //animations and so on)
+                    _currentCharacter.AttackAtRange(targetCharacter);
+                    EndTurn();
+                }
+                else
+                {
+                    if (GridSystem.Instance.IsMovementEnable(tilePosition))
                     {
-                        Character targetCharacter = GridSystem.Instance.GetCharacterFromCoords(cellPosition);
-                        //animations and so on)
-                        _currentCharacter.AttackAtRange(targetCharacter);
-                        EndTurn();
+                        GridSystem.Instance.ResetMovemap();
+
+                        Vector3Int targetMoveCoords = tilePosition;
+                        //if player attacks define tile where character should stay
+                        if (pointerStatus != PointerHandler.PointerStatus.Normal)
+                        {
+                            if (pointerStatus == PointerHandler.PointerStatus.RightAttack)
+                                targetMoveCoords += new Vector3Int(1, 0, 0);
+                            else if (pointerStatus == PointerHandler.PointerStatus.BottomAttack)
+                                targetMoveCoords += new Vector3Int(0, -1, 0);
+                            else if (pointerStatus == PointerHandler.PointerStatus.LeftAttack)
+                                targetMoveCoords += new Vector3Int(-1, 0, 0);
+                            else
+                                targetMoveCoords += new Vector3Int(0, 1, 0);
+                        }
+                        //Build path
+                        List<Node> path = GridSystem.Instance.BuildPath(_currentCharacter.Coords, targetMoveCoords, _currentCharacter);
+                        if (pointerStatus != PointerHandler.PointerStatus.Normal)
+                            path.Add(GridSystem.Instance.GetNode(tilePosition));
+                        GridSystem.Instance.PrintPath(path);
+                        List<Vector3Int> coordPath = GridSystem.Instance.ConvertFromGraphPath(path);
+
+                        //there is two options: this movements is melee attack or not
+                        if (targetCharacter == null)
+                            _currentCharacter.Move(coordPath);
+                        else
+                            _currentCharacter.Move(coordPath, targetCharacter);
                     }
                     else
-                    {
-                        bool isMovementEnable = GridSystem.Instance.IsMovementEnable(cellPosition);
-                        if (isMovementEnable)
-                        {
-                            GridSystem.Instance.ResetMovemap();
-                            //Build path
-                            List<Node> path = GridSystem.Instance.BuildPath(_currentCharacter.Coords, cellPosition, _currentCharacter);
-                            GridSystem.Instance.PrintPath(path);
-                            List<Vector3Int> coordPath = GridSystem.Instance.ConvertFromGraphPath(path);
-
-                            //there is two options: this movements is melee attack or not
-                            Character targetCharacter = GridSystem.Instance.GetCharacterFromCoords(cellPosition);
-                            if (targetCharacter == null)
-                            {
-                                //move
-                                _currentCharacter.Move(coordPath);
-                            }
-                            else
-                            {
-                                //attack
-                                _currentCharacter.Move(coordPath, targetCharacter);
-                            }
-                        }
-                        else
-                        {
-                            Debug.Log("Cell out of move map");
-                            _isInputBlocked = false;
-                        }
-                    }
+                        _isInputBlocked = false;
                 }
             }
         }
@@ -232,6 +285,7 @@ public class GameController : MonoBehaviour
         State = GameState.PlayerTurn;
         GridSystem.Instance.PrintCharacterMoveMap(_currentCharacter);
 
+        DefineAvailableMeleeTargets(_currentCharacter);
         if ((_currentCharacter.Properties.Class == CharacterClass.Archer || 
             _currentCharacter.Properties.Class == CharacterClass.Mage) &&
             !IsThereEnemyNearby(_currentCharacter))
@@ -288,7 +342,18 @@ public class GameController : MonoBehaviour
         AvailableRangedTargets.Clear();
         TurnQueue.Add(_currentCharacter);
         OnTurnEnd.Invoke();
-        StartNextTurn();
+        bool isGameEnded = false;
+        if (_isEndgameCheckNeeded != "")
+        {
+            isGameEnded = CheckEndgame(_isEndgameCheckNeeded);
+        }
+        if (!isGameEnded)
+        {
+            _isEndgameCheckNeeded = "";
+            StartNextTurn();
+        }
+        else
+            Debug.Log("Game ended");
     }
 
     public void GetCurrentCharacterInfo(out int characterBattleId, out CharacterProperties properties)
@@ -311,8 +376,7 @@ public class GameController : MonoBehaviour
                             {
                                 return otherCharacter == character;
                             });
-        //check end game
-
+        _isEndgameCheckNeeded = character.tag;
     }
 
     public void DefineAvailableRangedTargets(Character character)
@@ -321,7 +385,7 @@ public class GameController : MonoBehaviour
 
         //character can't shoot when there is enemy nearby
         bool isEnemyNearby = IsThereEnemyNearby(character);
-        if (isEnemyNearby)
+        if (isEnemyNearby || character.Properties.CurrentMissiles == 0)
             return;
 
         //go through all characters on map and define if they are visible from character's point
@@ -358,48 +422,18 @@ public class GameController : MonoBehaviour
         }
     }
 
-    //suppose that GridSystem 
     public void DefineAvailableMeleeTargets(Character character)
     {
-        AvailableRangedTargets.Clear();
+        AvailableMeleeTargets.Clear();
 
-        //character can't shoot when there is enemy nearby
-        bool isEnemyNearby = IsThereEnemyNearby(character);
-        if (isEnemyNearby)
-            return;
+        //define fraction in nodes language
+        Node.TileGameStatus gameStatus;
+        if (character.tag == "Ally")
+            gameStatus = Node.TileGameStatus.Enemy;
+        else
+            gameStatus = Node.TileGameStatus.Ally;
 
-        //go through all characters on map and define if they are visible from character's point
-        string oppositeFraction = character.GetOppositeFraction();
-        LayerMask layerMask = LayerMask.GetMask(oppositeFraction, "MapEdges");
-
-        foreach (var otherCharacter in CharacterList)
-        {
-            //ignore ally and dead characters
-            if (!otherCharacter.CompareTag(character.tag) && otherCharacter.Properties.CurrentHealth >= 0)
-            {
-                Vector3 direction = (otherCharacter.transform.position - character.transform.position).normalized;
-                float distanceBetweenCharacters = (otherCharacter.transform.position - character.transform.position).magnitude;
-
-                RaycastHit2D[] hits2D = Physics2D.RaycastAll(new Vector2(character.transform.position.x, character.transform.position.y),
-                                     new Vector2(direction.x, direction.y),
-                                     distanceBetweenCharacters,
-                                     layerMask);
-
-                //we need to define if edge was hit earlier than target character
-                bool found = false;
-                foreach (var hit in hits2D)
-                {
-                    //MapEdges layer no = 8
-                    if (hit.transform.gameObject.layer == 8)
-                    {
-                        found = true;
-                        break;
-                    }
-                }
-                if (!found)
-                    AvailableRangedTargets.Add(otherCharacter.Coords);
-            }
-        }
+        AvailableMeleeTargets = GridSystem.Instance.GetTileCoordsFromMovemap(gameStatus);
     }
 
 
@@ -426,5 +460,19 @@ public class GameController : MonoBehaviour
         if ((character1.Coords - character2.Coords).magnitude == 1)
             return true;
         return false;
+    }
+
+    public bool CheckEndgame(string fraction)
+    {
+        bool isGameEnded = true;
+        foreach(var character in TurnQueue)
+        {
+            if (character != null && character.tag == fraction)
+            {
+                isGameEnded = false;
+                break;
+            }
+        }
+        return isGameEnded;
     }
 }
