@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class AIAgent
+public interface AIAgent
 {
-    public Character ControlledCharacter;
+    Character GetControlledCharacter();
+
+    ContextBase GetContext();
 }

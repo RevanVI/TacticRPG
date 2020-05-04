@@ -1,19 +1,39 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 
-public class Qualifier
+[CreateAssetMenu(fileName = "NewQualifier", menuName = "UtilityAI/Qualifier", order = 10)]
+public class Qualifier: ScriptableObject
 {
     public string Name;
 
     public ActionBase Action;
-    public List<ConsiderationBase> Considerations;
 
-    public virtual List<ActionBase> Score(ContextBase context, float minValue)
+    [Serializable]
+    public struct ConsiderationPair
     {
-        //for every inntro in context go through all cinsiderations and calculate score
+        public ConsiderationBase Consideration;
+        public AnimationCurve ResolveCurve;
+    }
 
-        return null;
+    public List<ConsiderationPair> Considerations;
+
+    public virtual float Score(ContextBase context, float minValue)
+    {
+        float totalScore = 1f;
+        for (int i = 0; i < Considerations.Count; ++i)
+        {
+            float score = Considerations[i].Consideration.Score(context);
+            score = Considerations[i].ResolveCurve.Evaluate(score);
+
+            totalScore *= score;
+
+            //already has worse result
+            if (totalScore < minValue)
+                return 0f;
+        }
+        return 0f;
     }
 
 }

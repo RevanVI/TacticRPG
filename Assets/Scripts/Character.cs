@@ -155,7 +155,7 @@ public class Character : MonoBehaviour
 
     public IEnumerator AnimateMeleeAttack()
     {
-        
+
         float curTime = 0;
         bool end = false;
         int moveStatus = 0;
@@ -218,7 +218,7 @@ public class Character : MonoBehaviour
     {
         if (tag == "Ally")
             return "Enemy";
-        else 
+        else
             return "Ally";
     }
 }

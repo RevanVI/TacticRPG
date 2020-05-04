@@ -5,5 +5,7 @@ using UnityEngine;
 public class ContextBase
 {
     public AIAgent Provider;
-    
+    public AIAgent Target;
+
+    //public List<>
 }
