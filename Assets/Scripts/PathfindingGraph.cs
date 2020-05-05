@@ -19,10 +19,17 @@ public class Node
         Ally = 2,
         Enemy = 3,
     }
-
+    public TileGameStatus GameStatus;
     public bool HasEffect;
 
-    public TileGameStatus GameStatus;
+    public enum InfluenceStatus
+    {
+        Move = 0,
+        MeleeAttack = 1,
+    }
+    //some kinf of influence map
+    //contains pair of character's battle id and influence that it has on this tile
+    public List<KeyValuePair<int, InfluenceStatus>> Influences;
 
     //processing variables
     public enum NodeProcessStatus
@@ -162,6 +169,14 @@ public class PathfindingGraph
         {
             node.ProcessStatus = Node.NodeProcessStatus.NotVisited;
             node.ProcessValue = 0;
+        }
+    }
+
+    public void ClearInfluenceData()
+    {
+        foreach (var node in NodeGraph.Values)
+        {
+            node.Influences.Clear();
         }
     }
 }

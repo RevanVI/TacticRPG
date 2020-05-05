@@ -49,63 +49,6 @@ public class GridSystem : MonoBehaviour
     /*
      * Movemap section
      */
-
-    public List<Vector3Int> GetMoveMap(int moveDistance, Vector3Int position)
-    {
-        List<Vector3Int> map = new List<Vector3Int>();
-        List<Node> nodesToProcess = new List<Node>();
-
-        Node currentNode = _graph.GetNode(position);
-        if (currentNode.GameStatus == Node.TileGameStatus.Block)
-            return map;
-        currentNode.ProcessValue = moveDistance;
-        currentNode.ProcessStatus = Node.NodeProcessStatus.InOpenList;
-        nodesToProcess.Add(currentNode);
-
-        while(nodesToProcess.Count != 0)
-        {
-            currentNode = nodesToProcess[0];
-            foreach(var connection in currentNode.Connections)
-            {
-                Node endNode = connection.EndNode;
-
-                if (endNode.ProcessStatus == Node.NodeProcessStatus.NotVisited ||
-                    endNode.ProcessValue < currentNode.ProcessValue - 1)
-                {
-                    //first entry in open list and not taken by ally
-                    if (endNode.ProcessStatus == Node.NodeProcessStatus.NotVisited)
-                        map.Add(endNode.Coords);
-
-                    endNode.ProcessValue = currentNode.ProcessValue - 1;
-
-                    //if node has been already waiting processing in open list then change order
-                    if (endNode.ProcessStatus == Node.NodeProcessStatus.InOpenList)
-                    {
-                        nodesToProcess.Remove(endNode);
-                    }
-
-                    if (endNode.ProcessValue > 0)
-                    {
-                        int indexToInsert = nodesToProcess.FindLastIndex(delegate (Node node)
-                                                    {
-                                                        return node.ProcessValue >= endNode.ProcessValue;
-                                                    });
-                        nodesToProcess.Insert(indexToInsert, endNode);
-                        endNode.ProcessStatus = Node.NodeProcessStatus.InOpenList;
-                    }
-                    else
-                    {
-                        endNode.ProcessStatus = Node.NodeProcessStatus.InClosedList;
-                    }
-                }
-            }
-            nodesToProcess.Remove(currentNode);
-            currentNode.ProcessStatus = Node.NodeProcessStatus.InClosedList;
-        }
-
-        return map;
-    }
-
     public List<Vector3Int> GetBattleMoveMap(Node.TileGameStatus fraction, int moveDistance, Vector3Int position)
     {
         List<Vector3Int> map = new List<Vector3Int>();
@@ -188,6 +131,7 @@ public class GridSystem : MonoBehaviour
             nodesToProcess.Remove(currentNode);
             currentNode.ProcessStatus = Node.NodeProcessStatus.InClosedList;
         }
+        _graph.RestoreProcessStatus();
         return map;
     }
 
@@ -224,7 +168,6 @@ public class GridSystem : MonoBehaviour
     {
         _moveMapCoords.Clear();
         Movemap.ClearAllTiles();
-        _graph.RestoreProcessStatus();
     }
 
     public void PrintMovemapTiles(List<Vector3Int> coords, Tile printTile)
@@ -288,6 +231,7 @@ public class GridSystem : MonoBehaviour
                         centralTileNode.GameStatus = Node.TileGameStatus.Block;
                     else
                         centralTileNode.GameStatus = Node.TileGameStatus.Empty;
+                    centralTileNode.Influences = new List<KeyValuePair<int, Node.InfluenceStatus>>();
                     _graph.NodeGraph.Add(nodeKey, centralTileNode);
                 }
 
@@ -316,6 +260,7 @@ public class GridSystem : MonoBehaviour
                                     offsetTileNode.GameStatus = Node.TileGameStatus.Block;
                                 else
                                     offsetTileNode.GameStatus = Node.TileGameStatus.Empty;
+                                offsetTileNode.Influences = new List<KeyValuePair<int, Node.InfluenceStatus>>();
                                 _graph.NodeGraph.Add(offsetNodeKey, offsetTileNode);
                             }
 
@@ -664,4 +609,120 @@ public class GridSystem : MonoBehaviour
         return null;
     }
 
+
+    /*
+     * Influnce map section
+     */ 
+
+    //build influence map going through all characters
+    //can take much time
+    public void UpdateInfluenceMap(List<Character> characters)
+    {
+        _graph.ClearInfluenceData();
+        foreach (var character in characters)
+        {
+            if (character.Properties.CurrentHealth <= 0)
+                continue;
+            //Node.TileGameStatus fraction = GetTileStatusFromCharacter(character);
+            List<Vector3Int> moveInfluence;
+            List<Vector3Int> attackInfluence;
+            GetInfluenceMap(character, out moveInfluence, out attackInfluence);
+
+            AddInfluence(character.BattleId, Node.InfluenceStatus.Move, moveInfluence);
+            moveInfluence.AddRange(attackInfluence);
+            AddInfluence(character.BattleId, Node.InfluenceStatus.MeleeAttack, moveInfluence);
+
+            _graph.RestoreProcessStatus();
+        }
+    }
+
+    //Build movemap and additional tiles (attack influence) that character can attack
+    public void GetInfluenceMap(Character character, out List<Vector3Int> moveInfluence, out List<Vector3Int> attackInfluence)
+    {
+        moveInfluence = new List<Vector3Int>();
+        attackInfluence = new List<Vector3Int>();
+        List<Node> nodesToProcess = new List<Node>();
+
+        Node currentNode = _graph.GetNode(character.Coords);
+        currentNode.ProcessValue = character.Properties.Speed;
+        currentNode.ProcessStatus = Node.NodeProcessStatus.InOpenList;
+        nodesToProcess.Add(currentNode);
+
+        Node.TileGameStatus fraction = GetTileStatusFromCharacter(character);
+        Node.TileGameStatus oppositeFraction;
+        if (fraction == Node.TileGameStatus.Ally)
+            oppositeFraction = Node.TileGameStatus.Enemy;
+        else
+            oppositeFraction = Node.TileGameStatus.Ally;
+
+        while (nodesToProcess.Count != 0)
+        {
+            currentNode = nodesToProcess[0];
+            foreach (var connection in currentNode.Connections)
+            {
+                Node endNode = connection.EndNode;
+
+                if ((endNode.ProcessStatus == Node.NodeProcessStatus.NotVisited ||
+                    endNode.ProcessValue < currentNode.ProcessValue - 1) && endNode.GameStatus != fraction)
+                {
+                    //first entry in open list and not taken by ally
+                    if (endNode.ProcessStatus == Node.NodeProcessStatus.NotVisited)
+                        moveInfluence.Add(endNode.Coords);
+
+                    //hit to enemy ends turn
+                    if (endNode.GameStatus == oppositeFraction)
+                    {
+                        endNode.ProcessValue = 0;
+                        endNode.ProcessStatus = Node.NodeProcessStatus.InClosedList;
+                    }
+                    else
+                        endNode.ProcessValue = currentNode.ProcessValue - 1;
+
+                    //if node has been already waiting processing in open list then change order
+                    if (endNode.ProcessStatus == Node.NodeProcessStatus.InOpenList)
+                    {
+                        nodesToProcess.Remove(endNode);
+                    }
+
+                    if (endNode.ProcessValue > 0)
+                    {
+                        int indexToInsert = nodesToProcess.FindLastIndex(delegate (Node node)
+                        {
+                            return node.ProcessValue >= endNode.ProcessValue;
+                        });
+                        nodesToProcess.Insert(indexToInsert, endNode);
+                        endNode.ProcessStatus = Node.NodeProcessStatus.InOpenList;
+                    }
+                    else
+                    {
+                        //check all near tiles and find these that beyond move influence on 1 step
+                        Vector3Int[] offsets = { new Vector3Int(1, 0, 0), new Vector3Int(-1, 0, 0), new Vector3Int(0, 1, 0), new Vector3Int(0, -1, 0) };
+                        for (int i = 0; i < 4; ++i)
+                        {
+                            Vector3Int offsetPosition = endNode.Coords + offsets[i];
+                            Node offsetNode = _graph.GetNode(offsetPosition);
+                            if (offsetNode != null &&
+                                offsetNode.ProcessStatus == Node.NodeProcessStatus.NotVisited)
+                            {
+                                attackInfluence.Add(offsetNode.Coords);
+                                offsetNode.ProcessStatus = Node.NodeProcessStatus.InClosedList;
+                                offsetNode.ProcessValue = 0;
+                            }
+                        }
+                        endNode.ProcessStatus = Node.NodeProcessStatus.InClosedList;
+                    }
+                }
+            }
+            nodesToProcess.Remove(currentNode);
+            currentNode.ProcessStatus = Node.NodeProcessStatus.InClosedList;
+        }
+    }
+
+    public void AddInfluence(int characterId, Node.InfluenceStatus influenceStatus, List<Vector3Int> coords)
+    {
+        foreach(var coord in coords)
+        {
+            _graph.GetNode(coord).Influences.Add(new KeyValuePair<int, Node.InfluenceStatus>(characterId, influenceStatus));
+        }
+    }
 }

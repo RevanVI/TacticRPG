@@ -89,7 +89,8 @@ public class GameController : MonoBehaviour
         Vector3Int tilePosition = GridSystem.Instance.GetTilemapCoordsFromWorld(GridSystem.Instance.PathfindingMap, worldPosition);
         Character targetCharacter = GridSystem.Instance.GetCharacterFromCoords(tilePosition);
 
-        if (targetCharacter != null &&
+        if (State == GameState.PlayerTurn &&
+            targetCharacter != null &&
             targetCharacter.tag == _currentCharacter.GetOppositeFraction())
         {
             //cursor in melee attack
@@ -285,6 +286,8 @@ public class GameController : MonoBehaviour
         State = GameState.PlayerTurn;
         GridSystem.Instance.PrintCharacterMoveMap(_currentCharacter);
 
+        GridSystem.Instance.UpdateInfluenceMap(CharacterList);
+
         DefineAvailableMeleeTargets(_currentCharacter);
         if ((_currentCharacter.Properties.Class == CharacterClass.Archer || 
             _currentCharacter.Properties.Class == CharacterClass.Mage) &&
@@ -434,17 +437,9 @@ public class GameController : MonoBehaviour
     {
         AvailableMeleeTargets.Clear();
 
-        //define fraction in nodes language
-        Node.TileGameStatus gameStatus;
-        if (character.tag == "Ally")
-            gameStatus = Node.TileGameStatus.Enemy;
-        else
-            gameStatus = Node.TileGameStatus.Ally;
-
+        Node.TileGameStatus gameStatus = GridSystem.Instance.GetTileStatusFromCharacter(character);
         AvailableMeleeTargets = GridSystem.Instance.GetTileCoordsFromMovemap(gameStatus);
     }
-
-
 
     public bool IsThereEnemyNearby(Character character)
     {
