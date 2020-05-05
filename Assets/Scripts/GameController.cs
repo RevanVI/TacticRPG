@@ -271,7 +271,7 @@ public class GameController : MonoBehaviour
         OnTurnStart.Invoke();
         if (_currentCharacter.gameObject.CompareTag("Enemy"))
         {
-            StartPlayerTurn();
+            StartEnemyTurn();
            //StartCoroutine(StartEnemyTurn());
         }
         else
@@ -296,20 +296,28 @@ public class GameController : MonoBehaviour
         _isInputBlocked = false;
     }
 
-    private IEnumerator StartEnemyTurn()
+    private void StartEnemyTurn()
     {
         State = GameState.EnemyTurn;
         GridSystem.Instance.PrintCharacterMoveMap(_currentCharacter);
-        Debug.Log("Enemy turn");
-        yield return new WaitForSeconds(1f);
-        EndTurn();
+        DefineAvailableMeleeTargets(_currentCharacter);
+        if ((_currentCharacter.Properties.Class == CharacterClass.Archer ||
+            _currentCharacter.Properties.Class == CharacterClass.Mage) &&
+            !IsThereEnemyNearby(_currentCharacter))
+        {
+            DefineAvailableRangedTargets(_currentCharacter);
+            GridSystem.Instance.PrintMovemapTiles(AvailableRangedTargets, GridSystem.Instance.EnemyTile);
+        }
+        ((CharacterAI)_currentCharacter).MakeTurn();
+        //yield return new WaitForSeconds(1f);
+        //EndTurn();
     }
 
     public Character FindCharacter(Vector3Int tileCoords)
     {
         foreach (var character in TurnQueue)
         {
-            if (character.Coords == tileCoords)
+            if (character != null && character.Coords == tileCoords)
                 return character;
         }
         return null;

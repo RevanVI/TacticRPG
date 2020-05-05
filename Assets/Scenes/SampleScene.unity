@@ -224,6 +224,11 @@ PrefabInstance:
       propertyPath: Properties.CurrentMissiles
       value: 5
       objectReference: {fileID: 0}
+    - target: {fileID: 8744826376382252232, guid: 697d541291174e347b5b852f67a9630f,
+        type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8744826376382252233, guid: 697d541291174e347b5b852f67a9630f,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -6063,6 +6068,37 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 0.34873816, y: 0.19523908}
   m_EdgeRadius: 0
+--- !u!114 &2031119822
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2031119820}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3400c60d33bc4b04280f09adfe1fa405, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Properties:
+    Name: Enemy
+    Class: 0
+    Level: 5
+    Icon: {fileID: -7319077728696121584, guid: 92774b571ea790946a0e94204dc43ee3, type: 3}
+    Health: 10
+    CurrentHealth: 10
+    Speed: 3
+    RangedDamage: 0
+    MeleeDamage: 5
+    MaxMissiles: 0
+    CurrentMissiles: 0
+  BattleId: 0
+  Coords: {x: -1, y: 1, z: 0}
+  TargetPath: []
+  OnMoveEnded:
+    m_PersistentCalls:
+      m_Calls: []
+  DecisionMakerRef: {fileID: 11400000, guid: 4c12a5ee5c699ab47b5f1bf2712ecef4, type: 2}
 --- !u!1 &2053455739
 GameObject:
   m_ObjectHideFlags: 0

@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using UnityEngine;
 using System;
 
-[CreateAssetMenu(fileName = "NewQualifier", menuName = "UtilityAI/Qualifier", order = 10)]
+[CreateAssetMenu(fileName = "NewQualifier", menuName = "UtilityAI/Qualifier", order = 51)]
 public class Qualifier: ScriptableObject
 {
     public string Name;
-
+    public UtilityAISystem.Qualifiers Id;
     public ActionBase Action;
 
     [Serializable]
@@ -33,7 +33,7 @@ public class Qualifier: ScriptableObject
             if (totalScore < minValue)
                 return 0f;
         }
-        return 0f;
+        return totalScore;
     }
 
 }

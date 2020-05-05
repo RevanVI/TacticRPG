@@ -12,12 +12,41 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0f3523320c2ce694a96a30ac943e8473, type: 3}
   m_Name: MeleeAttackQualifier
   m_EditorClassIdentifier: 
-  Name: 
+  Name: MeleeAttack
+  Id: 1
+  Action: {fileID: 11400000, guid: 80ba1062901814542977d6ec7c44614f, type: 2}
   Considerations:
-  - Consideration: {fileID: 0}
+  - Consideration: {fileID: 11400000, guid: 52afedfbcad0ee64da718ec5808c1d18, type: 2}
     ResolveCurve:
       serializedVersion: 2
-      m_Curve: []
-      m_PreInfinity: 0
-      m_PostInfinity: 0
+      m_Curve:
+      - serializedVersion: 3
+        time: 0.0011672974
+        value: 0.13614637
+        inSlope: -0.07330482
+        outSlope: -0.07330482
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0.0903338
+      - serializedVersion: 3
+        time: 0.35215318
+        value: 0.5728358
+        inSlope: 2.2571185
+        outSlope: 2.2571185
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.052307516
+        outWeight: 0.064969435
+      - serializedVersion: 3
+        time: 1
+        value: 1.0023232
+        inSlope: 0.16772518
+        outSlope: 0.16772518
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.12004536
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
       m_RotationOrder: 0
