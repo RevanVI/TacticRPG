@@ -9,10 +9,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 334daa0f87be96a4897e37fcd5815bde, type: 3}
-  m_Name: WarriorDecisionMaker
+  m_Script: {fileID: 11500000, guid: fe58c73ee8ba1e2468abd72236146b28, type: 3}
+  m_Name: IsHealerInTeam
   m_EditorClassIdentifier: 
-  Name: WarriorDM
-  Qualifiers:
-  - {fileID: 11400000, guid: 53a6328504efcbc44a018aa231c65956, type: 2}
-  - {fileID: 11400000, guid: 03e2201d40997f34989418b1008d140a, type: 2}
+  Name: IsHealerInTeam

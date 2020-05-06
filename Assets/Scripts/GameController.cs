@@ -194,11 +194,11 @@ public class GameController : MonoBehaviour
                                 targetMoveCoords += new Vector3Int(0, 1, 0);
                         }
                         //Build path
-                        List<Node> path = GridSystem.Instance.BuildPath(_currentCharacter.Coords, targetMoveCoords, _currentCharacter);
+                        Path path = GridSystem.Instance.BuildPath(_currentCharacter.Coords, targetMoveCoords, _currentCharacter);
                         if (pointerStatus != PointerHandler.PointerStatus.Normal)
-                            path.Add(GridSystem.Instance.GetNode(tilePosition));
-                        GridSystem.Instance.PrintPath(path);
-                        List<Vector3Int> coordPath = GridSystem.Instance.ConvertFromGraphPath(path);
+                            path.NodePath.Add(GridSystem.Instance.GetNode(tilePosition));
+                        GridSystem.Instance.PrintPath(path.NodePath);
+                        List<Vector3Int> coordPath = path.ConvertToCoordPath();
 
                         //there is two options: this movements is melee attack or not
                         if (targetCharacter == null)

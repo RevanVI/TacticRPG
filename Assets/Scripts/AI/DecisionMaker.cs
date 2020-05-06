@@ -34,15 +34,28 @@ public class DecisionMaker: ScriptableObject
             {
                 for (int j = 0; j < context.AvailableMeleeTargets.Count; ++j)
                 {
-                    Decision decision = new Decision<Character>();
-
-                    //((Decision<Character>)decision).Target = GameController.Instance.FindCharacter(context.AvailableMeleeTargets[j]);
+                    Decision decision = new Decision();
                     decision.Context = context.Copy();
                     decision.Context.Target = GameController.Instance.FindCharacter(context.AvailableMeleeTargets[j]);
                     decision.QualifierRef = Qualifiers[i];
                     PossibleDecisions.Add(decision);
                 }
             }
+            else if (Qualifiers[i].Id == UtilityAISystem.Qualifiers.Move)
+            {
+                List<Vector3Int> movemap = GridSystem.Instance.GetCurrentMovemap();
+                for (int j = 0; j < movemap.Count; ++j)
+                {
+                    if (GridSystem.Instance.GetNode(movemap[j]).GetCharacter() != null)
+                        continue;
+                    Decision decision = new Decision();
+                    decision.Context = context.Copy();
+                    decision.Context.Target = movemap[j];
+                    decision.QualifierRef = Qualifiers[i];
+                    PossibleDecisions.Add(decision);
+                }
+            }
+
         }
     }
 

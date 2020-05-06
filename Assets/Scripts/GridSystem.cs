@@ -202,6 +202,11 @@ public class GridSystem : MonoBehaviour
         return list;
     }
 
+    public List<Vector3Int> GetCurrentMovemap()
+    {
+        return _moveMapCoords;
+    }
+
     /*
      * Graph section
      */
@@ -447,7 +452,7 @@ public class GridSystem : MonoBehaviour
         return Mathf.Sqrt(x * x + y * y);
     }
 
-    public List<Node> AStarPathfinding(Node start, Node end, Character character)
+    public Path AStarPathfinding(Node start, Node end, Character character)
     {
         start.CostSoFar = 0;
         start.EstimatedCost = Heuristic(start, end);
@@ -565,23 +570,27 @@ public class GridSystem : MonoBehaviour
         if (currentPair.Key != end)
             return null;
         //else build path
-        List<Node> path = new List<Node>();
+        Path path = new Path();
         Node currentNode = currentPair.Key;
+
         while (currentNode != start)
         {
-            path.Add(currentNode);
+            path.NodePath.Add(currentNode);
+            if (currentNode.HasEffect)
+                path.IsEffectOnPath = true;
             currentNode = currentNode.connection.StartNode;
+
         }
-        path.Reverse();
+        path.NodePath.Reverse();
         return path;
     }
 
-    public List<Node> BuildPath(Vector3Int start, Vector3Int end, Character character)
+    public Path BuildPath(Vector3Int start, Vector3Int end, Character character)
     {
         Node startNode = _graph.GetNode(start);
         Node endNode = _graph.GetNode(end);
 
-        List<Node> path = AStarPathfinding(startNode, endNode, character);
+        Path path = AStarPathfinding(startNode, endNode, character);
         _graph.RestoreProcessStatus();
 
         return path;
@@ -593,14 +602,6 @@ public class GridSystem : MonoBehaviour
         {
             Movemap.SetTile(path[i].Coords, PathTile);
         }
-    }
-
-    public List<Vector3Int> ConvertFromGraphPath(List<Node> path)
-    {
-        List<Vector3Int> coordPath = new List<Vector3Int>();
-        for (int i = 0; i < path.Count; ++i)
-            coordPath.Add(path[i].Coords);
-        return coordPath;
     }
 
     public Node.TileGameStatus GetTileStatusFromCharacter(Character character)
