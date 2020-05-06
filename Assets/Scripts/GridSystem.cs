@@ -737,4 +737,9 @@ public class GridSystem : MonoBehaviour
             _graph.GetNode(coord).Influences.Add(new KeyValuePair<int, Node.InfluenceStatus>(characterId, influenceStatus));
         }
     }
+
+    public List<KeyValuePair<int, Node.InfluenceStatus>> GetInfluenceData(Vector3Int coords)
+    {
+        return _graph.GetNode(coords).Influences;
+    }
 }
