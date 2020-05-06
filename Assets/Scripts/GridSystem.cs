@@ -452,112 +452,121 @@ public class GridSystem : MonoBehaviour
         start.CostSoFar = 0;
         start.EstimatedCost = Heuristic(start, end);
 
-        List<Node> openList = new List<Node>();
-        openList.Add(start);
+        int steps = character.Properties.Speed;
 
-        Node currentNode = null;
+        List<KeyValuePair<Node, int>> openList = new List<KeyValuePair<Node, int>>();
+        openList.Add(new KeyValuePair<Node, int>(start, steps));
+
+        //Node currentNode = null;
+        KeyValuePair<Node, int> currentPair;
         while (openList.Count != 0)
         {
-            currentNode = openList[0];
+            currentPair = openList[0];
 
             //find node with smallest estimated cost in open list
-            foreach (var node in openList)
+            foreach (var nodePair in openList)
             {
-                if (node.EstimatedCost < currentNode.EstimatedCost)
-                    currentNode = node;
+                if (nodePair.Key.EstimatedCost < currentPair.Key.EstimatedCost)
+                    currentPair = nodePair;
             }
 
             //if found node is goal node then stop searching and start build path
-            if (currentNode == end)
+            if (currentPair.Key == end)
                 break;
-
-            foreach (var connection in currentNode.Connections)
-            {
-                Node endNode = connection.EndNode;
-
-                //Characters cant go through another characters
-                //So we need to ignore nodes that taken by ally or enemy (if this is not goal node)
-                if ((endNode.GameStatus == Node.TileGameStatus.Ally || endNode.GameStatus == Node.TileGameStatus.Enemy) && endNode != end)
-                    continue;
-
-                //calculate the cost of movement
-                //this cost depend on tile and character properties
-                float cost = currentNode.CostSoFar + _basicCost;
-                if (endNode.HasEffect)
+            //if there is not the last possible step then analyse near tiles
+            if (currentPair.Value > 0)
+            { 
+                foreach (var connection in currentPair.Key.Connections)
                 {
-                    EffectTile effect = endNode.GetEffect();
-                    if (effect.Type == EffectType.Damage)
+                    Node endNode = connection.EndNode;
+
+                    //Characters cant go through another characters
+                    //So we need to ignore nodes that taken by ally or enemy (if this is not goal node)
+                    //also we need ignore tiles that beyond character's move range
+                    if ((endNode.GameStatus == Node.TileGameStatus.Ally || endNode.GameStatus == Node.TileGameStatus.Enemy) && endNode != end)
+                        continue;
+
+                    //calculate the cost of movement
+                    //this cost depend on tile and character properties
+                    float cost = currentPair.Key.CostSoFar + _basicCost;
+                    if (endNode.HasEffect)
                     {
-                        /*
-                         * maxHealth - damage
-                         * > 80% = +30
-                         * 50-80% = +50
-                         * 0-50% = +100
-                         */
-                        float hpPercent = (character.Properties.CurrentHealth - effect.Value) / character.Properties.Health;
-                        if (hpPercent > 0.8f)
-                            cost += 30;
-                        else if (hpPercent < 0.5f)
-                            cost += 50;
-                        else
-                            cost += 100;
-                    }
-                    else if (effect.Type == EffectType.Heal)
-                    {
-                        /*
-                         * cost reduce based on current character's health
-                         * 100% = 0
-                         * >80% = -2
-                         * 50-80% = -4
-                         * <50% = -6
-                         */
-                        if (character.Properties.CurrentHealth != character.Properties.Health)
+                        EffectTile effect = endNode.GetEffect();
+                        if (effect.Type == EffectType.Damage)
                         {
-                            float hpPercent = character.Properties.CurrentHealth / character.Properties.Health;
+                            /*
+                             * maxHealth - damage
+                             * > 80% = +30
+                             * 50-80% = +50
+                             * 0-50% = +100
+                             */
+                            float hpPercent = (character.Properties.CurrentHealth - effect.Value) / character.Properties.Health;
                             if (hpPercent > 0.8f)
-                                cost -= 2;
+                                cost += 30;
                             else if (hpPercent < 0.5f)
-                                cost -= 6;
+                                cost += 50;
                             else
-                                cost -= 4;
+                                cost += 100;
+                        }
+                        else if (effect.Type == EffectType.Heal)
+                        {
+                            /*
+                             * cost reduce based on current character's health
+                             * 100% = 0
+                             * >80% = -2
+                             * 50-80% = -4
+                             * <50% = -6
+                             */
+                            if (character.Properties.CurrentHealth != character.Properties.Health)
+                            {
+                                float hpPercent = character.Properties.CurrentHealth / character.Properties.Health;
+                                if (hpPercent > 0.8f)
+                                    cost -= 2;
+                                else if (hpPercent < 0.5f)
+                                    cost -= 6;
+                                else
+                                    cost -= 4;
+                            }
                         }
                     }
-                }
 
-                float heuristic;
-                if (endNode.ProcessStatus == Node.NodeProcessStatus.InClosedList)
-                {
-                    if (endNode.CostSoFar < cost)
-                        continue;
-                    heuristic = endNode.EstimatedCost - endNode.CostSoFar;
-                }
-                else if (endNode.ProcessStatus == Node.NodeProcessStatus.InOpenList)
-                {
-                    if (endNode.CostSoFar < cost)
-                        continue;
-                    heuristic = endNode.EstimatedCost - endNode.CostSoFar;
-                }
-                else
-                    heuristic = Heuristic(endNode, end);
+                    float heuristic;
+                    if (endNode.ProcessStatus == Node.NodeProcessStatus.InClosedList)
+                    {
+                        if (endNode.CostSoFar < cost)
+                            continue;
+                        heuristic = endNode.EstimatedCost - endNode.CostSoFar;
+                    }
+                    else if (endNode.ProcessStatus == Node.NodeProcessStatus.InOpenList)
+                    {
+                        if (endNode.CostSoFar < cost)
+                            continue;
+                        heuristic = endNode.EstimatedCost - endNode.CostSoFar;
+                    }
+                    else
+                        heuristic = Heuristic(endNode, end);
 
-                endNode.connection = connection;
-                endNode.CostSoFar = cost;
-                endNode.EstimatedCost = cost + heuristic;
-                if (endNode.ProcessStatus != Node.NodeProcessStatus.InOpenList)
-                {
-                    endNode.ProcessStatus = Node.NodeProcessStatus.InOpenList;
-                    openList.Add(endNode);
+                    endNode.connection = connection;
+                    endNode.CostSoFar = cost;
+                    endNode.EstimatedCost = cost + heuristic;
+                    if (endNode.ProcessStatus != Node.NodeProcessStatus.InOpenList)
+                    {
+                        endNode.ProcessStatus = Node.NodeProcessStatus.InOpenList;
+                        openList.Add(new KeyValuePair<Node, int>(endNode, currentPair.Value - 1));
+                    }
                 }
             }
-            openList.Remove(currentNode);
-            currentNode.ProcessStatus = Node.NodeProcessStatus.InClosedList;
+
+            openList.Remove(currentPair);
+            currentPair.Key.ProcessStatus = Node.NodeProcessStatus.InClosedList;
         }
 
         //if goal node wasn't found
-        if (currentNode != end)
+        if (currentPair.Key != end)
             return null;
         //else build path
         List<Node> path = new List<Node>();
+        Node currentNode = currentPair.Key;
         while (currentNode != start)
         {
             path.Add(currentNode);
@@ -572,7 +581,10 @@ public class GridSystem : MonoBehaviour
         Node startNode = _graph.GetNode(start);
         Node endNode = _graph.GetNode(end);
 
-        return AStarPathfinding(startNode, endNode, character);
+        List<Node> path = AStarPathfinding(startNode, endNode, character);
+        _graph.RestoreProcessStatus();
+
+        return path;
     }
 
     public void PrintPath(List<Node> path)
