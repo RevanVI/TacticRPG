@@ -1,0 +1,77 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0f3523320c2ce694a96a30ac943e8473, type: 3}
+  m_Name: RangeAttackQualifier
+  m_EditorClassIdentifier: 
+  Name: RangeAttackQualifier
+  Id: 2
+  Action: {fileID: 11400000, guid: 300cfe7bf53770942a278f8bb6793469, type: 2}
+  Considerations:
+  - Consideration: {fileID: 11400000, guid: fa7ea8ac5104c6240a462cea6af5f79d, type: 2}
+    ResolveCurve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 1
+        inSlope: 0.003720103
+        outSlope: 0.003720103
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0.15416667
+      - serializedVersion: 3
+        time: 0.9279101
+        value: 0.82759064
+        inSlope: -0.53501356
+        outSlope: -0.5091821
+        tangentMode: 1
+        weightedMode: 0
+        inWeight: 0.11090525
+        outWeight: 1
+      - serializedVersion: 3
+        time: 1
+        value: 0.8
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 0
+  - Consideration: {fileID: 11400000, guid: 0c0e2d282903e9242b6649736fa8cb4d, type: 2}
+    ResolveCurve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0.8
+        inSlope: 0.6171637
+        outSlope: 0.6171637
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0.12916666
+      - serializedVersion: 3
+        time: 1
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 0

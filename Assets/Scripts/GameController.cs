@@ -174,7 +174,6 @@ public class GameController : MonoBehaviour
                 {
                     //animations and so on)
                     _currentCharacter.AttackAtRange(targetCharacter);
-                    EndTurn();
                 }
                 else
                 {

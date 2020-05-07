@@ -198,6 +198,7 @@ public class Character : MonoBehaviour
     {
         attackedCharacter.TakeDamage(Properties.RangedDamage);
         --Properties.CurrentMissiles;
+        OnMoveEnded.Invoke();
     }
 
     public static string GetStringClassName(CharacterClass characterClass)

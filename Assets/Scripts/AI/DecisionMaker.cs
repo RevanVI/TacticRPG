@@ -64,6 +64,18 @@ public class DecisionMaker: ScriptableObject
                     PossibleDecisions.Add(decision);
                 }
             }
+            else if (Qualifiers[i].Id == UtilityAISystem.Qualifiers.RangedAttack)
+            {
+                for (int j = 0; j < context.AvailableRangedTargets.Count; ++j)
+                {
+                    Character target = GameController.Instance.FindCharacter(context.AvailableRangedTargets[j]);
+                    Decision decision = new Decision();
+                    decision.Context = context.Copy();
+                    decision.Context.Target = target;
+                    decision.QualifierRef = Qualifiers[i];
+                    PossibleDecisions.Add(decision);
+                }
+            }
         }
     }
 

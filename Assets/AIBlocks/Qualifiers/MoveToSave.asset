@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0f3523320c2ce694a96a30ac943e8473, type: 3}
-  m_Name: Move
+  m_Name: MoveToSave
   m_EditorClassIdentifier: 
-  Name: Move
+  Name: MoveToSAve
   Id: 3
   Action: {fileID: 11400000, guid: a0b5662c231289c428b821496605bb28, type: 2}
   Considerations:
@@ -22,21 +22,21 @@ MonoBehaviour:
       m_Curve:
       - serializedVersion: 3
         time: 0
-        value: 0.4
-        inSlope: 2
-        outSlope: 2
+        value: 0.1
+        inSlope: 2.3396225
+        outSlope: 2.3396225
         tangentMode: 0
         weightedMode: 0
         inWeight: 0
-        outWeight: 0
+        outWeight: 0.05
       - serializedVersion: 3
         time: 1
         value: 1
-        inSlope: 0.06312124
-        outSlope: 0.06312124
+        inSlope: 0
+        outSlope: 0
         tangentMode: 0
         weightedMode: 0
-        inWeight: 0.06053549
+        inWeight: 0
         outWeight: 0
       m_PreInfinity: 2
       m_PostInfinity: 2
@@ -48,12 +48,46 @@ MonoBehaviour:
       - serializedVersion: 3
         time: 0
         value: 1
-        inSlope: -0.3658225
-        outSlope: -0.3658225
+        inSlope: -0.25
+        outSlope: -0.25
+        tangentMode: 34
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1
+        value: 0.75
+        inSlope: -0.25
+        outSlope: -0.25
+        tangentMode: 34
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 0
+  - Consideration: {fileID: 11400000, guid: 2e07f6f1b6487ca419af3ba9b65a6d36, type: 2}
+    ResolveCurve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 1
+        inSlope: 0
+        outSlope: 0
         tangentMode: 0
         weightedMode: 0
         inWeight: 0
-        outWeight: 0.4566939
+        outWeight: 0
+      - serializedVersion: 3
+        time: 0.8040596
+        value: 0.7375848
+        inSlope: -0.74917734
+        outSlope: -0.74917734
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
       - serializedVersion: 3
         time: 1
         value: 0.5
@@ -62,40 +96,6 @@ MonoBehaviour:
         tangentMode: 0
         weightedMode: 0
         inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 0
-  - Consideration: {fileID: 11400000, guid: bede35e684d5dcc48a123727376b9a7f, type: 2}
-    ResolveCurve:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 0
-        value: 0.6
-        inSlope: -0.044150148
-        outSlope: -0.044150148
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0.0845497
-      - serializedVersion: 3
-        time: 0.2089945
-        value: 0.68749356
-        inSlope: 0.76110435
-        outSlope: 0.76110435
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0.33333334
-        outWeight: 0.051839724
-      - serializedVersion: 3
-        time: 1
-        value: 0.85
-        inSlope: 0.05088188
-        outSlope: 0.05088188
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0.12211453
         outWeight: 0
       m_PreInfinity: 2
       m_PostInfinity: 2
