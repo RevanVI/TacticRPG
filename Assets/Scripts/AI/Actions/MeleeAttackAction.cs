@@ -9,9 +9,12 @@ public class MeleeAttackAction : ActionBase
     {
         Character currentCharacter = Context.Provider.GetControlledCharacter();
         GridSystem.Instance.ResetMovemap();
-        Path path = GridSystem.Instance.BuildPath(currentCharacter.Coords, ((Character)Context.Target).Coords, currentCharacter);
-        List<Vector3Int> coordsPath = path.ConvertToCoordPath();
 
+        Vector3Int attackTileCoords = (Vector3Int)Context.Data["AttackTile"];
+
+        Path path = GridSystem.Instance.BuildPath(currentCharacter.Coords, attackTileCoords, currentCharacter);
+        List<Vector3Int> coordsPath = path.ConvertToCoordPath();
+        coordsPath.Add(((Character)Context.Target).Coords);
         currentCharacter.Move(coordsPath, (Character)Context.Target);
     }
 }

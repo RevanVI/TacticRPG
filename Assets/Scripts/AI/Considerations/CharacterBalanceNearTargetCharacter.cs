@@ -12,11 +12,12 @@ public class CharacterBalanceNearTargetCharacter : ConsiderationBase
 
         Character currentCharacter = context.Provider.GetControlledCharacter();
 
-        //get tile from that character will be attack
-        Path path = GridSystem.Instance.BuildPath(currentCharacter.Coords, ((Character)context.Target).Coords, currentCharacter);
+        Vector3Int attackTileCoords = (Vector3Int)context.Data["AttackTile"];
+
+        //Path path = GridSystem.Instance.BuildPath(currentCharacter.Coords, attackTileCoords, currentCharacter);
 
         //calculate character balance on found tile
-        List<KeyValuePair<int, Node.InfluenceStatus>> influenceData = GridSystem.Instance.GetInfluenceData(path.NodePath[path.NodePath.Count - 2].Coords);
+        List<KeyValuePair<int, Node.InfluenceStatus>> influenceData = GridSystem.Instance.GetInfluenceData(attackTileCoords);
         foreach(var pair in influenceData)
         {
             if (GameController.Instance.FindCharacter(pair.Key).tag == currentCharacter.tag)
@@ -25,7 +26,7 @@ public class CharacterBalanceNearTargetCharacter : ConsiderationBase
                 ++enemyCharacters;
         }
 
-        float score = 1 + (allyCharacters - enemyCharacters) / 3;
+        float score = 1 + (allyCharacters - enemyCharacters) / 3f;
 
         return Mathf.Clamp(score, 0, 1);
     }

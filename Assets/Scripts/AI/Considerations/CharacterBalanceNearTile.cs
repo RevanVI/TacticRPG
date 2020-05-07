@@ -22,7 +22,7 @@ public class CharacterBalanceNearTile : ConsiderationBase
                 ++enemyCharacters;
         }
 
-        float score = 1 + (allyCharacters - enemyCharacters) / 3;
+        float score = 1 + (allyCharacters - enemyCharacters) / 3f;
 
         return Mathf.Clamp(score, 0, 1);
     }

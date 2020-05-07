@@ -61,6 +61,8 @@ public class GameController : MonoBehaviour
         RoundCount = 0;
         TurnCount = 0;
         _battleIdCounter = 0;
+
+        LogHandler.Initialise();
     }
 
     // Start is called before the first frame update

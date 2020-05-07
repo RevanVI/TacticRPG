@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class CharacterAI : Character, AIAgent
 {
+
+
     public DecisionMaker DecisionMakerRef;
 
     public void MakeTurn()

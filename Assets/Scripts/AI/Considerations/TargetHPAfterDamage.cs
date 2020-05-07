@@ -11,6 +11,6 @@ public class TargetHPAfterDamage : ConsiderationBase
         int currentHP = targetCharacter.Properties.CurrentHealth - context.Provider.GetControlledCharacter().Properties.MeleeDamage;
         if (currentHP < 0)
             currentHP = 0;
-        return currentHP / targetCharacter.Properties.Health;
+        return ((float)currentHP) / targetCharacter.Properties.Health;
     }
 }

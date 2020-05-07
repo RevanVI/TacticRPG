@@ -6,6 +6,7 @@ public class ContextBase
 {
     public AIAgent Provider;
     public object Target;
+    public Dictionary<string, object> Data = new Dictionary<string, object>();
 
     public List<Vector3Int> AvailableRangedTargets;
     public List<Vector3Int> AvailableMeleeTargets;

@@ -34,11 +34,20 @@ public class DecisionMaker: ScriptableObject
             {
                 for (int j = 0; j < context.AvailableMeleeTargets.Count; ++j)
                 {
-                    Decision decision = new Decision();
-                    decision.Context = context.Copy();
-                    decision.Context.Target = GameController.Instance.FindCharacter(context.AvailableMeleeTargets[j]);
-                    decision.QualifierRef = Qualifiers[i];
-                    PossibleDecisions.Add(decision);
+                    Character target = GameController.Instance.FindCharacter(context.AvailableMeleeTargets[j]);
+                    //we need define from that side character can attack his target
+                    List<Vector3Int> possibleTilesToAttack = GridSystem.Instance.GetNearMovemapTilesList(target.Coords);
+                    if (GameController.Instance.IsCharactersStayNear(context.Provider.GetControlledCharacter(), target))
+                        possibleTilesToAttack.Add(context.Provider.GetControlledCharacter().Coords);
+                    foreach (var coords in possibleTilesToAttack)
+                    {
+                        Decision decision = new Decision();
+                        decision.Context = context.Copy();
+                        decision.Context.Target = target;
+                        decision.Context.Data.Add("AttackTile", coords);
+                        decision.QualifierRef = Qualifiers[i];
+                        PossibleDecisions.Add(decision);
+                    }
                 }
             }
             else if (Qualifiers[i].Id == UtilityAISystem.Qualifiers.Move)
@@ -55,7 +64,6 @@ public class DecisionMaker: ScriptableObject
                     PossibleDecisions.Add(decision);
                 }
             }
-
         }
     }
 
@@ -63,12 +71,17 @@ public class DecisionMaker: ScriptableObject
     {
         float maxScore = float.MinValue;
         Decision bestDecision = null;
+
+        LogHandler.WriteText($"Turn: {GameController.Instance.TurnCount}\nCharacter: {GameController.Instance._currentCharacter.name}\n");
+
         for (int i = 0; i < PossibleDecisions.Count; ++i)
         {
-            float curScore = PossibleDecisions[i].QualifierRef.Score(PossibleDecisions[i].Context, maxScore);
-            if (curScore > maxScore)
+            LogHandler.WriteText($"\tDCE: {PossibleDecisions[i].QualifierRef.Name}");
+
+            float score = PossibleDecisions[i].QualifierRef.Score(PossibleDecisions[i].Context, maxScore);
+            if (score > maxScore)
             {
-                maxScore = curScore;
+                maxScore = score;
                 bestDecision = PossibleDecisions[i];
             }
 

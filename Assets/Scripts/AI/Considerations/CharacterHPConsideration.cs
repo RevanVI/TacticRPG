@@ -8,6 +8,6 @@ public class CharacterHPConsideration : ConsiderationBase
     public override float Score(ContextBase context)
     {
         Character character = context.Provider.GetControlledCharacter();
-        return character.Properties.CurrentHealth / character.Properties.CurrentHealth;
+        return ((float)character.Properties.CurrentHealth) / character.Properties.CurrentHealth;
     }
 }
