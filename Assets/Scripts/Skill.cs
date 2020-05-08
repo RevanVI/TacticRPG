@@ -5,6 +5,8 @@ using UnityEngine.Events;
 
 public class Skill: ScriptableObject
 {
+    public string Name;
+    public Sprite SkillImage;
     public int Cooldown;
     public int Count;
     public int CurrentCount;
