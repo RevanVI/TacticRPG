@@ -9,7 +9,7 @@ public class RangeAttackAction : ActionBase
     public override void Execute()
     {
         Character currentCharacter = Context.Provider.GetControlledCharacter();
-        GridSystem.Instance.ResetMovemap();
+        
         currentCharacter.AttackAtRange((Character)Context.Target);
     }
 }

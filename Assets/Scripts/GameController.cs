@@ -287,7 +287,7 @@ public class GameController : MonoBehaviour
         State = GameState.PlayerTurn;
         GridSystem.Instance.PrintCharacterMoveMap(_currentCharacter);
 
-        //GridSystem.Instance.UpdateInfluenceMap(CharacterList);
+        GridSystem.Instance.UpdateInfluenceMap(CharacterList);
 
         DefineAvailableMeleeTargets(_currentCharacter);
         if ((_currentCharacter.Properties.Class == CharacterClass.Archer || 
@@ -304,7 +304,7 @@ public class GameController : MonoBehaviour
     {
         State = GameState.EnemyTurn;
         GridSystem.Instance.PrintCharacterMoveMap(_currentCharacter);
-        //GridSystem.Instance.UpdateInfluenceMap(CharacterList);
+        GridSystem.Instance.UpdateInfluenceMap(CharacterList);
 
         DefineAvailableMeleeTargets(_currentCharacter);
         if ((_currentCharacter.Properties.Class == CharacterClass.Archer ||

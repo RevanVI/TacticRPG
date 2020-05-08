@@ -660,6 +660,7 @@ public class GridSystem : MonoBehaviour
         currentNode.ProcessValue = character.Properties.Speed;
         currentNode.ProcessStatus = Node.NodeProcessStatus.InOpenList;
         nodesToProcess.Add(currentNode);
+        moveInfluence.Add(currentNode.Coords);
 
         Node.TileGameStatus fraction = GetTileStatusFromCharacter(character);
         Node.TileGameStatus oppositeFraction;

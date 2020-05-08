@@ -196,6 +196,30 @@ public class Character : MonoBehaviour
 
     public void AttackAtRange(Character attackedCharacter)
     {
+        StartCoroutine(AnimateAttackAtRange(attackedCharacter));
+    }
+
+    public IEnumerator AnimateAttackAtRange(Character attackedCharacter)
+    {
+        float curTime = 0f;
+        bool end = false;
+
+        GridSystem.Instance.ResetMovemap();
+        List<Vector3Int> tilesCoords = new List<Vector3Int>();
+        tilesCoords.Add(attackedCharacter.Coords);
+        GridSystem.Instance.PrintMovemapTiles(tilesCoords, GridSystem.Instance.EnemyTile);
+        while (!end)
+        {
+            curTime += Time.deltaTime;
+            if (curTime >= 1.5f)
+            {
+                curTime = 1.5f;
+                end = true;
+            }
+            yield return null;
+        }
+
+        GridSystem.Instance.ResetMovemap();
         attackedCharacter.TakeDamage(Properties.RangedDamage);
         --Properties.CurrentMissiles;
         OnMoveEnded.Invoke();
