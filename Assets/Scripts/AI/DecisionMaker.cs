@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Decision
 {
-    public Qualifier QualifierRef;
+    public QualifierElement QualifierRef;
     public ContextBase Context;
 }
 
@@ -18,7 +18,8 @@ public class DecisionMaker: ScriptableObject
 {
     public string Name;
     public AIAgent Requester;
-    public List<Qualifier> Qualifiers;
+
+    public List<QualifierElement> Qualifiers;
     public List<Decision> PossibleDecisions = null;
 
     //foreach possible decision pair it with target given by context

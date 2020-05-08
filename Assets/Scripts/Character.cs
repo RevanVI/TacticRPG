@@ -61,6 +61,8 @@ public class Character : MonoBehaviour
     public UnityIntEvent OnDamageTaken;
     public UnityIntEvent OnDie;
 
+    public List<Skill> Skills = new List<Skill>();
+
     private void Start()
     {
         _isMoving = false;
@@ -151,6 +153,15 @@ public class Character : MonoBehaviour
             GridSystem.Instance.RemoveCharacterFromNode(Coords, this);
             OnDie.Invoke(BattleId);
         }
+    }
+
+    public void AddHP(int value)
+    {
+        if (value <= 0)
+            return;
+        Properties.CurrentHealth += value;
+        if (Properties.CurrentHealth > Properties.Health)
+            Properties.CurrentHealth = Properties.Health;
     }
 
     public IEnumerator AnimateMeleeAttack()
