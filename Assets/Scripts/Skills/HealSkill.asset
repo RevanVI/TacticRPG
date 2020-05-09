@@ -17,8 +17,8 @@ MonoBehaviour:
     type: 3}
   TypeUse: 0
   Distance: 2
-  Cooldown: 2
-  CurrentCooldown: 0
+  Cooldown: 0
+  CurrentCooldown: 2
   Count: 0
   CurrentCount: 0
   TypeTarget: 0
@@ -26,4 +26,4 @@ MonoBehaviour:
   OnExecute:
     m_PersistentCalls:
       m_Calls: []
-  Value: 3
+  Value: 20

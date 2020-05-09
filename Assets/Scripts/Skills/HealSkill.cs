@@ -13,6 +13,8 @@ public class HealSkill : Skill
         //Character targetCharacter = (Character)Target;
         //targetCharacter.AddHP(Value);
 
+        ((Character)Target).TakeDamage(Value);
+
         if (Cooldown > 0)
         {
             if (CurrentCooldown > 0)
@@ -21,7 +23,7 @@ public class HealSkill : Skill
                 CurrentCooldown = Cooldown;
         }
         else
-                --CurrentCount;
+            --CurrentCount;
             
         OnExecute.Invoke();
     }

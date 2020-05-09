@@ -43,6 +43,12 @@ public class Skill: ScriptableObject
 
     public UnityEvent OnExecute = new UnityEvent();
 
+    public virtual void Reset()
+    {
+        CurrentCooldown = 0;
+        CurrentCount = 0;
+    }
+
     public virtual void Execute()
     {
 

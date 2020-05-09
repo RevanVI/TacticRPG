@@ -456,6 +456,7 @@ public class GameController : MonoBehaviour
 
     public void SkillUsed(int skillNo)
     {
+        _skillNo = skillNo;
         _skillData = _currentCharacter.Skills[skillNo];
         if (_skillData.TypeUse == Skill.UseType.Melee)
         {

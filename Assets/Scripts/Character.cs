@@ -62,6 +62,7 @@ public class Character : MonoBehaviour
     public UnityIntEvent OnDie;
 
     public List<Skill> Skills = new List<Skill>();
+    private int _skillToUse = -1;
 
     private void Start()
     {
@@ -73,6 +74,11 @@ public class Character : MonoBehaviour
         //register in gameController
         GameController.Instance.RegisterCharacter(this);
         GridSystem.Instance.DefineCharacter(this);
+
+        foreach (var skill in Skills)
+        {
+            skill.OnExecute.AddListener(OnSkillExecutionEnd);
+        }
     }
 
     void FixedUpdate()
@@ -100,7 +106,10 @@ public class Character : MonoBehaviour
                 {
                     _isMoving = false;
                     GridSystem.Instance.AddCharacterToNode(Coords, this);
-                    OnMoveEnded.Invoke();
+                    if (_skillToUse != -1)
+                        Skills[_skillToUse].Execute();
+                    else
+                        OnMoveEnded.Invoke();
                 }
                 else
                 {
@@ -260,7 +269,17 @@ public class Character : MonoBehaviour
 
     public void ExecuteSkill(int skillNo, List<Vector3Int> path = null)
     {
+        if (path != null)
+            Move(path);
+        else
+            Skills[_skillToUse].Execute();
+        _skillToUse = skillNo;
+    }
 
+    public void OnSkillExecutionEnd()
+    {
+        _skillToUse = -1;
+        OnMoveEnded.Invoke();
     }
 }
 
