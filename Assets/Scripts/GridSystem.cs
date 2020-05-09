@@ -18,8 +18,9 @@ public class GridSystem : MonoBehaviour
     public Tile AllyTile;
     public Tile EnemyTile;
 
-    private List<Vector3Int> _moveMapCoords;
-    //private List<Vector3Int> _attackMapCoords;
+    private Movemap _movemap;
+
+    public Vector3Int[] offsets = { new Vector3Int(1, 0, 0), new Vector3Int(-1, 0, 0), new Vector3Int(0, 1, 0), new Vector3Int(0, -1, 0) };
 
     private void Awake()
     {
@@ -49,9 +50,10 @@ public class GridSystem : MonoBehaviour
     /*
      * Movemap section
      */
-    public List<Vector3Int> GetBattleMoveMap(Node.TileGameStatus fraction, int moveDistance, Vector3Int position)
+
+    public Movemap BuildMovemap(Node.TileGameStatus fraction, int moveDistance, Vector3Int position)
     {
-        List<Vector3Int> map = new List<Vector3Int>();
+        Movemap map = new Movemap();
         List<Node> nodesToProcess = new List<Node>();
 
         Node currentNode = _graph.GetNode(position);
@@ -60,6 +62,7 @@ public class GridSystem : MonoBehaviour
         currentNode.ProcessValue = moveDistance;
         currentNode.ProcessStatus = Node.NodeProcessStatus.InOpenList;
         nodesToProcess.Add(currentNode);
+        map.MoveCoords.Add(currentNode.Coords);
 
         Node.TileGameStatus oppositeFraction;
         if (fraction == Node.TileGameStatus.Ally)
@@ -75,27 +78,18 @@ public class GridSystem : MonoBehaviour
                 Node endNode = connection.EndNode;
 
                 if ((endNode.ProcessStatus == Node.NodeProcessStatus.NotVisited ||
-                    endNode.ProcessValue < currentNode.ProcessValue - 1) && endNode.GameStatus != fraction)
+                    endNode.ProcessValue < currentNode.ProcessValue - 1) && 
+                    endNode.GameStatus == Node.TileGameStatus.Empty)
                 {
-                    //first entry in open list and not taken by ally
+                    //first entry in open list and not taken by characters
                     if (endNode.ProcessStatus == Node.NodeProcessStatus.NotVisited)
-                        map.Add(endNode.Coords);
+                        map.MoveCoords.Add(endNode.Coords);
 
-                    //hit to enemy ends turn
-                    if (endNode.GameStatus == oppositeFraction)
-                    {
-                        endNode.ProcessValue = 0;
-                        //prevent checks on enemies beyond movemap
-                        endNode.ProcessStatus = Node.NodeProcessStatus.InClosedList;
-                    }
-                    else
-                        endNode.ProcessValue = currentNode.ProcessValue - 1;
+                    endNode.ProcessValue = currentNode.ProcessValue - 1;
 
                     //if node has been already waiting processing in open list then change order
                     if (endNode.ProcessStatus == Node.NodeProcessStatus.InOpenList)
-                    {
                         nodesToProcess.Remove(endNode);
-                    }
 
                     if (endNode.ProcessValue > 0)
                     {
@@ -107,25 +101,7 @@ public class GridSystem : MonoBehaviour
                         endNode.ProcessStatus = Node.NodeProcessStatus.InOpenList;
                     }
                     else
-                    {
-                        //check if enemy nearby
-                        //it can be beyond movemap on 1 turn or within movemap
-                        Vector3Int[] offsets = { new Vector3Int(1, 0, 0), new Vector3Int(-1, 0, 0), new Vector3Int(0, 1, 0), new Vector3Int(0, -1, 0) };
-                        for (int i = 0; i < 4; ++i)
-                        {
-                            Vector3Int offsetPosition = endNode.Coords + offsets[i];
-                            Node offsetNode = _graph.GetNode(offsetPosition);
-                            if (offsetNode != null &&
-                                offsetNode.ProcessStatus == Node.NodeProcessStatus.NotVisited &&
-                                offsetNode.GameStatus == oppositeFraction)
-                            {
-                                    map.Add(offsetNode.Coords);
-                                    offsetNode.ProcessStatus = Node.NodeProcessStatus.InClosedList;
-                                    offsetNode.ProcessValue = 0;
-                            }
-                        }
                         endNode.ProcessStatus = Node.NodeProcessStatus.InClosedList;
-                    }
                 }
             }
             nodesToProcess.Remove(currentNode);
@@ -135,38 +111,69 @@ public class GridSystem : MonoBehaviour
         return map;
     }
 
-    private void PrintMoveMap(List<Vector3Int> movemapCoords, Node.TileGameStatus characterFraction)
+    public void DefineAvailableMeleeTargets(Movemap movemap, List<Character> characterList, Node.TileGameStatus characterFraction, int attackDistance)
     {
-        foreach (var tilePosition in movemapCoords)
+        foreach(var character in characterList)
         {
-            Node node = _graph.NodeGraph[_graph.CreateNodeKeyFromCoordinates(tilePosition.x, tilePosition.y)];
-            if (node.GameStatus == Node.TileGameStatus.Empty)
-                Movemap.SetTile(tilePosition, MoveTile);
-            else if (node.GameStatus == characterFraction)
-                Movemap.SetTile(tilePosition, AllyTile);
-            else
-                Movemap.SetTile(tilePosition, EnemyTile);
+            Vector3Int offsetCoords = character.Coords;
+            //check all directions
+            for (int i = 0; i < 4; ++i)
+            {
+                offsetCoords = character.Coords + attackDistance * offsets[i];
+
+                //if tile belongs to movemap and empty than character can attack target from it
+                if (movemap.MoveCoords.IndexOf(offsetCoords) != -1)
+                {
+                    movemap.EnemyMeleeCoords.Add(character.Coords);
+                    break;
+                }
+            }
         }
     }
 
-    public void PrintCharacterMoveMap(Character character)
+    public List<Vector3Int> DefinePositionsToAttackTarget(Movemap movemap, Character target, int attackDistance)
+    {
+        Vector3Int offsetCoords = target.Coords;
+        List<Vector3Int> positions = new List<Vector3Int>();
+        //check all directions
+        for (int i = 0; i < 4; ++i)
+        {
+            offsetCoords = target.Coords + attackDistance * offsets[i];
+
+            //if tile belongs to movemap and empty than character can attack from it
+            if (movemap.MoveCoords.IndexOf(offsetCoords) != -1)
+                positions.Add(offsetCoords);
+        }
+        return positions;
+    }
+
+    public void PrintMoveMap(Movemap movemap, Node.TileGameStatus characterFraction)
+    {
+        foreach (var tilePosition in movemap.MoveCoords)
+            Movemap.SetTile(tilePosition, MoveTile);
+        foreach(var tilePosition in movemap.EnemyMeleeCoords)
+            Movemap.SetTile(tilePosition, EnemyTile);
+        foreach (var tilePosition in movemap.RangeCoords)
+            Movemap.SetTile(tilePosition, EnemyTile);
+    }
+
+    public void PrintCharacterMoveMap(Character character, List<Character> characterList, int attackDistance)
     {
         Node.TileGameStatus fraction;
         fraction = GetTileStatusFromCharacter(character);
-        _moveMapCoords = GetBattleMoveMap(fraction, character.Properties.Speed, character.Coords);
-        PrintMoveMap(_moveMapCoords, fraction);
+        _movemap = BuildMovemap(fraction, character.Properties.Speed, character.Coords);
+        DefineAvailableMeleeTargets(_movemap, characterList, fraction, attackDistance);
+        PrintMoveMap(_movemap, fraction);
     }
 
     public bool IsMovementEnable(Vector3Int targetPosition)
     {
-        if (_moveMapCoords.IndexOf(targetPosition) != -1)
-            return true;
-        return false;
+        return _movemap.IsMovementEnable(targetPosition);
     }
 
     public void ResetMovemap()
     {
-        _moveMapCoords.Clear();
+        _movemap.Clear();
         Movemap.ClearAllTiles();
     }
 
@@ -180,7 +187,6 @@ public class GridSystem : MonoBehaviour
 
     public List<Vector3Int> GetNearMovemapTilesList(Vector3Int coords)
     {
-        Vector3Int[] offsets = { new Vector3Int(1, 0, 0), new Vector3Int(-1, 0, 0), new Vector3Int(0, 1, 0), new Vector3Int(0, -1, 0) };
         List<Vector3Int> nearTiles = new List<Vector3Int>();
         for (int i = 0; i < 4; ++i)
         {
@@ -191,25 +197,14 @@ public class GridSystem : MonoBehaviour
         return nearTiles;
     }
 
-    public List<Vector3Int> GetTileCoordsFromMovemap(Node.TileGameStatus gameStatus)
+    public Movemap GetCurrentMovemap()
     {
-        List<Vector3Int> list = new List<Vector3Int>();
-        foreach (var coords in _moveMapCoords)
-        {
-            if (_graph.GetNode(coords).GameStatus == gameStatus)
-                list.Add(coords);
-        }
-        return list;
+        return _movemap;
     }
 
-    public List<Vector3Int> GetCurrentMovemap()
-    {
-        return _moveMapCoords;
-    }
-
-    /*
-     * Graph section
-     */
+/*
+ * Graph section
+ */
     public void InitializeGraph()
     {
         _graph = new PathfindingGraph();
@@ -243,7 +238,6 @@ public class GridSystem : MonoBehaviour
                 //adding connections
                 if (centralTileNode.GameStatus == Node.TileGameStatus.Empty)
                 {
-                    Vector3Int[] offsets = { new Vector3Int(1, 0, 0), new Vector3Int(-1, 0, 0), new Vector3Int(0, 1, 0), new Vector3Int(0, -1, 0) };
                     for (int i = 0; i < 4; ++i)
                     {
                         Vector3Int currentTileLocation = pos + offsets[i];
@@ -710,7 +704,6 @@ public class GridSystem : MonoBehaviour
                     else
                     {
                         //check all near tiles and find these that beyond move influence on 1 step
-                        Vector3Int[] offsets = { new Vector3Int(1, 0, 0), new Vector3Int(-1, 0, 0), new Vector3Int(0, 1, 0), new Vector3Int(0, -1, 0) };
                         for (int i = 0; i < 4; ++i)
                         {
                             Vector3Int offsetPosition = endNode.Coords + offsets[i];

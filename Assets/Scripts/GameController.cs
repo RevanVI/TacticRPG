@@ -22,13 +22,12 @@ public class GameController : MonoBehaviour
     public PlayerController PlayerController;
     public List<Character> TurnQueue;
     public TurnPanelController TurnPanelControllerRef;
+    public SkillPanel SkillPanelRef;
     public Character _currentCharacter;
 
     public List<Character> CharacterList;
     public EnemyController[] Enemies;
     public List<Vector3Int> AvailableRangedTargets;
-    public List<Vector3Int> AvailableMeleeTargets;
-
 
     private bool _isInputBlocked;
 
@@ -49,6 +48,11 @@ public class GameController : MonoBehaviour
      */
     private string _isEndgameCheckNeeded = "";
 
+    //--------------------
+
+    private bool _skillCursor = false;
+    private Skill _skillData;
+    //--------------------------
 
     private void Awake()
     {
@@ -87,6 +91,8 @@ public class GameController : MonoBehaviour
         Vector3 worldPosition = ray.GetPoint(-ray.origin.z / ray.direction.z);
         IngamePointer.transform.position = worldPosition;
 
+        if (_skillCursor)
+            return;
         //check if cursor point on enemy
         Vector3Int tilePosition = GridSystem.Instance.GetTilemapCoordsFromWorld(GridSystem.Instance.PathfindingMap, worldPosition);
         Character targetCharacter = GridSystem.Instance.GetCharacterFromCoords(tilePosition);
@@ -96,7 +102,7 @@ public class GameController : MonoBehaviour
             targetCharacter.tag == _currentCharacter.GetOppositeFraction())
         {
             //cursor in melee attack
-            if (AvailableMeleeTargets.Contains(tilePosition) &&
+            if (GridSystem.Instance.GetCurrentMovemap().EnemyMeleeCoords.Contains(tilePosition) &&
                 (_currentCharacter.Properties.Class == CharacterClass.Warrior ||
                  _currentCharacter.Properties.Class == CharacterClass.Healer ||
                  AvailableRangedTargets.Count == 0 || //enemy nearby or no missiles 
@@ -216,7 +222,7 @@ public class GameController : MonoBehaviour
 
     private void DefineTurnQueue()
     {
-        foreach(var character in CharacterList)
+        foreach (var character in CharacterList)
         {
             if (character.Properties.Health > 0)
             {
@@ -227,7 +233,7 @@ public class GameController : MonoBehaviour
                 if (indexToInsert == -1)
                     TurnQueue.Add(character);
                 else
-                    TurnQueue.Insert(indexToInsert, character);   
+                    TurnQueue.Insert(indexToInsert, character);
             }
         }
         TurnQueue.Add(null);
@@ -243,13 +249,13 @@ public class GameController : MonoBehaviour
         for (int i = 0; i < TurnQueue.Count; ++i)
         {
             if (TurnQueue[i] != null)
-            { 
+            {
                 TurnPanelControllerRef.AddIcon(TurnQueue[i], TurnQueue[i].Properties);
                 //on this point character and his icon exist and we can connect it
                 //TurnQueue[i].OnDamageTaken.AddListener(OnCharacterTakeDamage);
             }
             //else paste marker
-            
+
         }
         RoundCount = 1;
         StartNextTurn();
@@ -271,10 +277,11 @@ public class GameController : MonoBehaviour
         }
         ++TurnCount;
         OnTurnStart.Invoke();
+        SkillPanelRef.SetSkills(_currentCharacter);
         if (_currentCharacter.gameObject.CompareTag("Enemy"))
         {
             StartEnemyTurn();
-           //StartCoroutine(StartEnemyTurn());
+            //StartCoroutine(StartEnemyTurn());
         }
         else
         {
@@ -285,12 +292,11 @@ public class GameController : MonoBehaviour
     private void StartPlayerTurn()
     {
         State = GameState.PlayerTurn;
-        GridSystem.Instance.PrintCharacterMoveMap(_currentCharacter);
+        GridSystem.Instance.PrintCharacterMoveMap(_currentCharacter, CharacterList, 0);
 
         GridSystem.Instance.UpdateInfluenceMap(CharacterList);
 
-        DefineAvailableMeleeTargets(_currentCharacter);
-        if ((_currentCharacter.Properties.Class == CharacterClass.Archer || 
+        if ((_currentCharacter.Properties.Class == CharacterClass.Archer ||
             _currentCharacter.Properties.Class == CharacterClass.Mage) &&
             !IsThereEnemyNearby(_currentCharacter))
         {
@@ -303,10 +309,9 @@ public class GameController : MonoBehaviour
     private void StartEnemyTurn()
     {
         State = GameState.EnemyTurn;
-        GridSystem.Instance.PrintCharacterMoveMap(_currentCharacter);
+        GridSystem.Instance.PrintCharacterMoveMap(_currentCharacter, CharacterList, 0);
         GridSystem.Instance.UpdateInfluenceMap(CharacterList);
 
-        DefineAvailableMeleeTargets(_currentCharacter);
         if ((_currentCharacter.Properties.Class == CharacterClass.Archer ||
             _currentCharacter.Properties.Class == CharacterClass.Mage) &&
             !IsThereEnemyNearby(_currentCharacter))
@@ -406,7 +411,7 @@ public class GameController : MonoBehaviour
         string oppositeFraction = character.GetOppositeFraction();
         LayerMask layerMask = LayerMask.GetMask(oppositeFraction, "MapEdges");
 
-        foreach(var otherCharacter in CharacterList)
+        foreach (var otherCharacter in CharacterList)
         {
             //ignore ally and dead characters
             if (!otherCharacter.CompareTag(character.tag) && otherCharacter.Properties.CurrentHealth >= 0)
@@ -421,7 +426,7 @@ public class GameController : MonoBehaviour
 
                 //we need to define if edge was hit earlier than target character
                 bool found = false;
-                foreach(var hit in hits2D)
+                foreach (var hit in hits2D)
                 {
                     //MapEdges layer no = 8
                     if (hit.transform.gameObject.layer == 8)
@@ -434,18 +439,6 @@ public class GameController : MonoBehaviour
                     AvailableRangedTargets.Add(otherCharacter.Coords);
             }
         }
-    }
-
-    public void DefineAvailableMeleeTargets(Character character)
-    {
-        AvailableMeleeTargets.Clear();
-
-        Node.TileGameStatus gameStatus;
-        if (character.tag == "Ally")
-            gameStatus = Node.TileGameStatus.Enemy;
-        else
-            gameStatus = Node.TileGameStatus.Ally;
-        AvailableMeleeTargets = GridSystem.Instance.GetTileCoordsFromMovemap(gameStatus);
     }
 
     public bool IsThereEnemyNearby(Character character)
@@ -475,7 +468,7 @@ public class GameController : MonoBehaviour
     public bool CheckEndgame(string fraction)
     {
         bool isGameEnded = true;
-        foreach(var character in TurnQueue)
+        foreach (var character in TurnQueue)
         {
             if (character != null && character.tag == fraction)
             {
@@ -485,4 +478,112 @@ public class GameController : MonoBehaviour
         }
         return isGameEnded;
     }
+
+    public void SkillUsed(int skillNo)
+    {
+        _skillData = _currentCharacter.Skills[skillNo];
+        _skillCursor = true;
+        //_currentCharacter.Skills[skillNo].Execute();
+    }
+
+    public IEnumerator MeleeSkillProcess()
+    {
+        yield return null;
+
+        //skill can be denied so we need to save the data
+        Movemap oldMovemap = GridSystem.Instance.GetCurrentMovemap();
+        List<Vector3Int> oldAvailableRangedTargets = AvailableRangedTargets;
+        List<Vector3Int> oldAvailableMeleeTargets = oldMovemap.EnemyMeleeCoords;
+
+        //print new skill movemap
+        GridSystem.Instance.ResetMovemap();
+        Movemap skillMovemap = new Movemap();
+        skillMovemap.MoveCoords = oldMovemap.MoveCoords;
+        GridSystem.Instance.DefineAvailableMeleeTargets(skillMovemap, CharacterList, GridSystem.Instance.GetTileStatusFromCharacter(_currentCharacter), _skillData.Distance);
+        GridSystem.Instance.PrintMoveMap(skillMovemap, GridSystem.Instance.GetTileStatusFromCharacter(_currentCharacter));
+
+        //define where player points
+        Vector3 worldPosition = IngamePointer.transform.position;
+        Vector3Int tilePosition = GridSystem.Instance.GetTilemapCoordsFromWorld(GridSystem.Instance.PathfindingMap, worldPosition);
+        Character targetCharacter = GridSystem.Instance.GetCharacterFromCoords(tilePosition);
+
+        Vector3Int choosedPosition = new Vector3Int();
+        if (targetCharacter != null &&
+            targetCharacter.tag == _currentCharacter.GetOppositeFraction() &&
+            skillMovemap.EnemyMeleeCoords.Contains(tilePosition))
+        {
+            Vector2 relativeMousePosition = GridSystem.Instance.GetRelativePointPositionInTile(GridSystem.Instance.PathfindingMap,
+                                                                                               tilePosition,
+                                                                                               worldPosition);
+            List<Vector3Int> possiblePositions = GridSystem.Instance.DefinePositionsToAttackTarget(skillMovemap, targetCharacter, _skillData.Distance);
+
+            List<PointerHandler.PointerStatus> directionsList = new List<PointerHandler.PointerStatus>();
+            foreach (var nearTileCoords in possiblePositions)
+            {
+                Vector3Int offset = tilePosition - nearTileCoords;
+                if (offset.x < 0)
+                    directionsList.Add(PointerHandler.PointerStatus.RightAttack);
+                else if (offset.x > 0)
+                    directionsList.Add(PointerHandler.PointerStatus.LeftAttack);
+                else if (offset.y < 0)
+                    directionsList.Add(PointerHandler.PointerStatus.TopAttack);
+                else
+                    directionsList.Add(PointerHandler.PointerStatus.BottomAttack);
+            }
+
+            PointerHandler.PointerStatus defaultStatus = directionsList[0];
+            float space = 0.25f;
+
+            int currentDirectionIndex = -1;
+
+            if (possiblePositions.Count == 1)
+            {
+                IngamePointer.SetSprite(directionsList[0]);
+            }
+            else
+            {
+                //check all directions from right to top clockwise
+                if (relativeMousePosition.x > (1 - space) && (currentDirectionIndex = directionsList.IndexOf(PointerHandler.PointerStatus.RightAttack)) != -1)
+                    IngamePointer.SetSprite(PointerHandler.PointerStatus.RightAttack);
+                else if (relativeMousePosition.y < space && (currentDirectionIndex = directionsList.IndexOf(PointerHandler.PointerStatus.BottomAttack)) != -1)
+                    IngamePointer.SetSprite(PointerHandler.PointerStatus.BottomAttack);
+                else if (relativeMousePosition.x < space && (currentDirectionIndex = directionsList.IndexOf(PointerHandler.PointerStatus.LeftAttack)) != -1)
+                    IngamePointer.SetSprite(PointerHandler.PointerStatus.LeftAttack);
+                else if (relativeMousePosition.y > (1 - space) && (currentDirectionIndex = directionsList.IndexOf(PointerHandler.PointerStatus.TopAttack)) != -1)
+                    IngamePointer.SetSprite(PointerHandler.PointerStatus.TopAttack);
+                else
+                    IngamePointer.SetSprite(defaultStatus);
+
+                //print current character attack position
+                choosedPosition = possiblePositions[currentDirectionIndex];
+            }
+        }
+        else
+        {
+            IngamePointer.SetSprite(PointerHandler.PointerStatus.Normal);
+        }
+
+        if (Input.GetMouseButtonDown(0) && 
+            !EventSystem.current.IsPointerOverGameObject() &&
+            IngamePointer.GetStatus() != PointerHandler.PointerStatus.Normal)
+        {
+            if (!_isInputBlocked)
+            {
+                _isInputBlocked = true;
+
+                //in updating pointer we have already calculate all data 
+                PointerHandler.PointerStatus pointerStatus = IngamePointer.GetStatus();
+
+                GridSystem.Instance.ResetMovemap();
+                //Build path
+                Path path = GridSystem.Instance.BuildPath(_currentCharacter.Coords, choosedPosition, _currentCharacter);
+
+                
+                GridSystem.Instance.PrintPath(path.NodePath);
+                List<Vector3Int> coordPath = path.ConvertToCoordPath();
+            }
+        }
+    }
 }
+
+
