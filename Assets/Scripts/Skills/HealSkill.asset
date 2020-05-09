@@ -16,13 +16,13 @@ MonoBehaviour:
   SkillImage: {fileID: -4045741745079397469, guid: 92774b571ea790946a0e94204dc43ee3,
     type: 3}
   TypeUse: 0
-  Distance: 0
+  Distance: 2
   Cooldown: 2
-  CurrentCooldown: 1
+  CurrentCooldown: 0
   Count: 0
   CurrentCount: 0
   TypeTarget: 0
-  FractionTarget: 0
+  FractionTarget: 2
   OnExecute:
     m_PersistentCalls:
       m_Calls: []

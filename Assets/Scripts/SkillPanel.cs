@@ -40,4 +40,9 @@ public class SkillPanel : MonoBehaviour
         SkillButtons[buttonNo].Deactivate();
         GameController.Instance.SkillUsed(buttonNo);
     }
+
+    public void SkillDenied(int skillNo)
+    {
+        SkillButtons[skillNo].Activate();
+    }
 }

@@ -358,17 +358,17 @@ PrefabInstance:
     - target: {fileID: 8744826376382252232, guid: 697d541291174e347b5b852f67a9630f,
         type: 3}
       propertyPath: Properties.CurrentHealth
-      value: 7
+      value: 10
       objectReference: {fileID: 0}
     - target: {fileID: 8744826376382252232, guid: 697d541291174e347b5b852f67a9630f,
         type: 3}
       propertyPath: Coords.x
-      value: 3
+      value: -1
       objectReference: {fileID: 0}
     - target: {fileID: 8744826376382252232, guid: 697d541291174e347b5b852f67a9630f,
         type: 3}
       propertyPath: Coords.y
-      value: 2
+      value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 8744826376382252232, guid: 697d541291174e347b5b852f67a9630f,
         type: 3}
@@ -389,12 +389,12 @@ PrefabInstance:
     - target: {fileID: 8744826376382252233, guid: 697d541291174e347b5b852f67a9630f,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: 3.2
+      value: -0.5
       objectReference: {fileID: 0}
     - target: {fileID: 8744826376382252233, guid: 697d541291174e347b5b852f67a9630f,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 2.27
+      value: 4.31
       objectReference: {fileID: 0}
     - target: {fileID: 8744826376382252233, guid: 697d541291174e347b5b852f67a9630f,
         type: 3}
@@ -5568,6 +5568,12 @@ MonoBehaviour:
   PathTile: {fileID: 11400000, guid: fb9450cf95fb99542bafcdad64321e22, type: 2}
   AllyTile: {fileID: 11400000, guid: d49f8eb2d63889a44a815fcaa78a6b8c, type: 2}
   EnemyTile: {fileID: 11400000, guid: 084d1d616619b8e4ea1f6a1a5f29ec88, type: 2}
+  PositionTile: {fileID: 0}
+  offsets:
+  - {x: 1, y: 0, z: 0}
+  - {x: -1, y: 0, z: 0}
+  - {x: 0, y: 1, z: 0}
+  - {x: 0, y: -1, z: 0}
 --- !u!4 &1911364341 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6241859755739520737, guid: 36b969997df529f4eae5b2d1e85bc0b8,
@@ -5613,7 +5619,6 @@ MonoBehaviour:
   CharacterList: []
   Enemies: []
   AvailableRangedTargets: []
-  AvailableMeleeTargets: []
   OnTurnStart:
     m_PersistentCalls:
       m_Calls: []

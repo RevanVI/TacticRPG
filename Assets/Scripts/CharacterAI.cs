@@ -25,7 +25,7 @@ public class CharacterAI : Character, AIAgent
     {
         ContextBase context = new ContextBase();
         context.Provider = this;
-        context.AvailableMeleeTargets = GameController.Instance.AvailableMeleeTargets;
+        context.AvailableMeleeTargets = GridSystem.Instance.GetCurrentMovemap().EnemyMeleeCoords;
         context.AvailableRangedTargets = GameController.Instance.AvailableRangedTargets;
         return context;
     }

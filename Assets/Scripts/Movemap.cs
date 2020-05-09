@@ -22,6 +22,15 @@ public class Movemap
         return false;
     }
 
+    public bool IsCoordsInMovemap(Vector3Int targetPosition)
+    {
+        if (MoveCoords.IndexOf(targetPosition) != -1 ||
+            EnemyMeleeCoords.IndexOf(targetPosition) != -1 ||
+            RangeCoords.IndexOf(targetPosition) != -1)
+            return true;
+        return false;
+    }
+
     public void Clear()
     {
         MoveCoords.Clear();
@@ -40,6 +49,15 @@ public class Movemap
             return EnemyMeleeCoords;
         }
         return null;
+    }
+
+    public Movemap Copy()
+    {
+        Movemap newMovemap = new Movemap();
+        newMovemap.MoveCoords.AddRange(MoveCoords);
+        newMovemap.EnemyMeleeCoords.AddRange(EnemyMeleeCoords);
+        newMovemap.RangeCoords.AddRange(RangeCoords);
+        return newMovemap;
     }
 
 }

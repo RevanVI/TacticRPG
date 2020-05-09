@@ -49,8 +49,7 @@ public class GameController : MonoBehaviour
     private string _isEndgameCheckNeeded = "";
 
     //--------------------
-
-    private bool _skillCursor = false;
+    private int _skillNo;
     private Skill _skillData;
     //--------------------------
 
@@ -91,7 +90,7 @@ public class GameController : MonoBehaviour
         Vector3 worldPosition = ray.GetPoint(-ray.origin.z / ray.direction.z);
         IngamePointer.transform.position = worldPosition;
 
-        if (_skillCursor)
+        if (_skillData != null)
             return;
         //check if cursor point on enemy
         Vector3Int tilePosition = GridSystem.Instance.GetTilemapCoordsFromWorld(GridSystem.Instance.PathfindingMap, worldPosition);
@@ -113,11 +112,6 @@ public class GameController : MonoBehaviour
                                                                                                    worldPosition);
                 List<Vector3Int> nearAvailableTiles = GridSystem.Instance.GetNearMovemapTilesList(tilePosition);
 
-                //movemap doesn't returns tile there character stays, but current character can stay near enemy
-                //so need to check this option
-                if (IsCharactersStayNear(_currentCharacter, targetCharacter))
-                    nearAvailableTiles.Add(_currentCharacter.Coords);
-
                 List<PointerHandler.PointerStatus> directionsList = new List<PointerHandler.PointerStatus>();
                 foreach (var nearTileCoords in nearAvailableTiles)
                 {
@@ -132,27 +126,8 @@ public class GameController : MonoBehaviour
                         directionsList.Add(PointerHandler.PointerStatus.BottomAttack);
                 }
 
-                PointerHandler.PointerStatus defaultStatus = directionsList[0];
-                float space = 0.25f;
-
-                if (nearAvailableTiles.Count == 1)
-                {
-                    IngamePointer.SetSprite(directionsList[0]);
-                }
-                else
-                {
-                    //check all directions from right to top clockwise
-                    if (relativeMousePosition.x > (1 - space) && directionsList.Contains(PointerHandler.PointerStatus.RightAttack))
-                        IngamePointer.SetSprite(PointerHandler.PointerStatus.RightAttack);
-                    else if (relativeMousePosition.y < space && directionsList.Contains(PointerHandler.PointerStatus.BottomAttack))
-                        IngamePointer.SetSprite(PointerHandler.PointerStatus.BottomAttack);
-                    else if (relativeMousePosition.x < space && directionsList.Contains(PointerHandler.PointerStatus.LeftAttack))
-                        IngamePointer.SetSprite(PointerHandler.PointerStatus.LeftAttack);
-                    else if (relativeMousePosition.y > (1 - space) && directionsList.Contains(PointerHandler.PointerStatus.TopAttack))
-                        IngamePointer.SetSprite(PointerHandler.PointerStatus.TopAttack);
-                    else
-                        IngamePointer.SetSprite(defaultStatus);
-                }
+                int directionIndex = -1;
+                IngamePointer.DefineSprite(relativeMousePosition, directionsList, out directionIndex);         
             }
             //cursor in range attack
             else if ((_currentCharacter.Properties.Class == CharacterClass.Archer ||
@@ -183,7 +158,7 @@ public class GameController : MonoBehaviour
                 }
                 else
                 {
-                    if (GridSystem.Instance.IsMovementEnable(tilePosition))
+                    if (GridSystem.Instance.GetCurrentMovemap().IsCoordsInMovemap(tilePosition) && tilePosition != _currentCharacter.Coords)
                     {
                         GridSystem.Instance.ResetMovemap();
 
@@ -202,12 +177,12 @@ public class GameController : MonoBehaviour
                         }
                         //Build path
                         Path path = GridSystem.Instance.BuildPath(_currentCharacter.Coords, targetMoveCoords, _currentCharacter);
+                        GridSystem.Instance.PrintPath(path.NodePath);
                         if (pointerStatus != PointerHandler.PointerStatus.Normal)
                             path.NodePath.Add(GridSystem.Instance.GetNode(tilePosition));
-                        GridSystem.Instance.PrintPath(path.NodePath);
                         List<Vector3Int> coordPath = path.ConvertToCoordPath();
 
-                        //there is two options: this movements is melee attack or not
+                        //there is two options: attack or movement
                         if (targetCharacter == null)
                             _currentCharacter.Move(coordPath);
                         else
@@ -292,7 +267,7 @@ public class GameController : MonoBehaviour
     private void StartPlayerTurn()
     {
         State = GameState.PlayerTurn;
-        GridSystem.Instance.PrintCharacterMoveMap(_currentCharacter, CharacterList, 0);
+        GridSystem.Instance.PrintCharacterMoveMap(_currentCharacter, CharacterList, 1);
 
         GridSystem.Instance.UpdateInfluenceMap(CharacterList);
 
@@ -482,106 +457,122 @@ public class GameController : MonoBehaviour
     public void SkillUsed(int skillNo)
     {
         _skillData = _currentCharacter.Skills[skillNo];
-        _skillCursor = true;
+        if (_skillData.TypeUse == Skill.UseType.Melee)
+        {
+            StartCoroutine(MeleeSkillProcess());
+        }
+
         //_currentCharacter.Skills[skillNo].Execute();
     }
 
     public IEnumerator MeleeSkillProcess()
     {
-        yield return null;
+        bool end = false;
 
         //skill can be denied so we need to save the data
-        Movemap oldMovemap = GridSystem.Instance.GetCurrentMovemap();
-        List<Vector3Int> oldAvailableRangedTargets = AvailableRangedTargets;
-        List<Vector3Int> oldAvailableMeleeTargets = oldMovemap.EnemyMeleeCoords;
+        Movemap oldMovemap = GridSystem.Instance.GetCurrentMovemap().Copy();
 
         //print new skill movemap
         GridSystem.Instance.ResetMovemap();
         Movemap skillMovemap = new Movemap();
-        skillMovemap.MoveCoords = oldMovemap.MoveCoords;
+        skillMovemap.MoveCoords.AddRange(oldMovemap.MoveCoords);
         GridSystem.Instance.DefineAvailableMeleeTargets(skillMovemap, CharacterList, GridSystem.Instance.GetTileStatusFromCharacter(_currentCharacter), _skillData.Distance);
         GridSystem.Instance.PrintMoveMap(skillMovemap, GridSystem.Instance.GetTileStatusFromCharacter(_currentCharacter));
 
-        //define where player points
-        Vector3 worldPosition = IngamePointer.transform.position;
-        Vector3Int tilePosition = GridSystem.Instance.GetTilemapCoordsFromWorld(GridSystem.Instance.PathfindingMap, worldPosition);
-        Character targetCharacter = GridSystem.Instance.GetCharacterFromCoords(tilePosition);
+        List<Vector3Int> choosedPosition = new List<Vector3Int>();
+        bool isNeedToRepaintMovemap = false;
 
-        Vector3Int choosedPosition = new Vector3Int();
-        if (targetCharacter != null &&
-            targetCharacter.tag == _currentCharacter.GetOppositeFraction() &&
-            skillMovemap.EnemyMeleeCoords.Contains(tilePosition))
+        while (!end)
         {
-            Vector2 relativeMousePosition = GridSystem.Instance.GetRelativePointPositionInTile(GridSystem.Instance.PathfindingMap,
-                                                                                               tilePosition,
-                                                                                               worldPosition);
-            List<Vector3Int> possiblePositions = GridSystem.Instance.DefinePositionsToAttackTarget(skillMovemap, targetCharacter, _skillData.Distance);
+            //define where player points
+            Vector3 worldPosition = IngamePointer.transform.position;
+            Vector3Int tilePosition = GridSystem.Instance.GetTilemapCoordsFromWorld(GridSystem.Instance.PathfindingMap, worldPosition);
+            Character targetCharacter = GridSystem.Instance.GetCharacterFromCoords(tilePosition);
 
-            List<PointerHandler.PointerStatus> directionsList = new List<PointerHandler.PointerStatus>();
-            foreach (var nearTileCoords in possiblePositions)
+            if (targetCharacter != null &&
+                targetCharacter.tag == _currentCharacter.GetOppositeFraction() &&
+                skillMovemap.EnemyMeleeCoords.Contains(tilePosition))
             {
-                Vector3Int offset = tilePosition - nearTileCoords;
-                if (offset.x < 0)
-                    directionsList.Add(PointerHandler.PointerStatus.RightAttack);
-                else if (offset.x > 0)
-                    directionsList.Add(PointerHandler.PointerStatus.LeftAttack);
-                else if (offset.y < 0)
-                    directionsList.Add(PointerHandler.PointerStatus.TopAttack);
-                else
-                    directionsList.Add(PointerHandler.PointerStatus.BottomAttack);
-            }
+                Vector2 relativeMousePosition = GridSystem.Instance.GetRelativePointPositionInTile(GridSystem.Instance.PathfindingMap,
+                                                                                                   tilePosition,
+                                                                                                   worldPosition);
+                List<Vector3Int> possiblePositions = GridSystem.Instance.DefinePositionsToAttackTarget(skillMovemap, targetCharacter, _skillData.Distance);
 
-            PointerHandler.PointerStatus defaultStatus = directionsList[0];
-            float space = 0.25f;
+                List<PointerHandler.PointerStatus> directionsList = new List<PointerHandler.PointerStatus>();
+                foreach (var nearTileCoords in possiblePositions)
+                {
+                    Vector3Int offset = tilePosition - nearTileCoords;
+                    if (offset.x < 0)
+                        directionsList.Add(PointerHandler.PointerStatus.RightAttack);
+                    else if (offset.x > 0)
+                        directionsList.Add(PointerHandler.PointerStatus.LeftAttack);
+                    else if (offset.y < 0)
+                        directionsList.Add(PointerHandler.PointerStatus.TopAttack);
+                    else
+                        directionsList.Add(PointerHandler.PointerStatus.BottomAttack);
+                }
 
-            int currentDirectionIndex = -1;
+                int currentDirectionIndex = -1;
+                IngamePointer.DefineSprite(relativeMousePosition, directionsList, out currentDirectionIndex);
 
-            if (possiblePositions.Count == 1)
-            {
-                IngamePointer.SetSprite(directionsList[0]);
+                //print current character attack position
+                if (choosedPosition.Count != 0)
+                    GridSystem.Instance.PrintMovemapTiles(choosedPosition, GridSystem.Instance.MoveTile);
+                choosedPosition.Clear();
+                choosedPosition.Add(possiblePositions[currentDirectionIndex]);
+                isNeedToRepaintMovemap = true;
+                GridSystem.Instance.PrintMovemapTiles(choosedPosition, GridSystem.Instance.PositionTile);
             }
             else
             {
-                //check all directions from right to top clockwise
-                if (relativeMousePosition.x > (1 - space) && (currentDirectionIndex = directionsList.IndexOf(PointerHandler.PointerStatus.RightAttack)) != -1)
-                    IngamePointer.SetSprite(PointerHandler.PointerStatus.RightAttack);
-                else if (relativeMousePosition.y < space && (currentDirectionIndex = directionsList.IndexOf(PointerHandler.PointerStatus.BottomAttack)) != -1)
-                    IngamePointer.SetSprite(PointerHandler.PointerStatus.BottomAttack);
-                else if (relativeMousePosition.x < space && (currentDirectionIndex = directionsList.IndexOf(PointerHandler.PointerStatus.LeftAttack)) != -1)
-                    IngamePointer.SetSprite(PointerHandler.PointerStatus.LeftAttack);
-                else if (relativeMousePosition.y > (1 - space) && (currentDirectionIndex = directionsList.IndexOf(PointerHandler.PointerStatus.TopAttack)) != -1)
-                    IngamePointer.SetSprite(PointerHandler.PointerStatus.TopAttack);
-                else
-                    IngamePointer.SetSprite(defaultStatus);
-
-                //print current character attack position
-                choosedPosition = possiblePositions[currentDirectionIndex];
+                IngamePointer.SetSprite(PointerHandler.PointerStatus.Normal);
+                if (isNeedToRepaintMovemap)
+                {
+                    GridSystem.Instance.PrintMovemapTiles(choosedPosition, GridSystem.Instance.MoveTile);
+                    isNeedToRepaintMovemap = false;
+                    choosedPosition.Clear();
+                }
             }
-        }
-        else
-        {
-            IngamePointer.SetSprite(PointerHandler.PointerStatus.Normal);
-        }
 
-        if (Input.GetMouseButtonDown(0) && 
-            !EventSystem.current.IsPointerOverGameObject() &&
-            IngamePointer.GetStatus() != PointerHandler.PointerStatus.Normal)
-        {
-            if (!_isInputBlocked)
+            if (Input.GetMouseButtonDown(0) &&
+                !EventSystem.current.IsPointerOverGameObject() &&
+                IngamePointer.GetStatus() != PointerHandler.PointerStatus.Normal)
             {
-                _isInputBlocked = true;
+                if (!_isInputBlocked)
+                {
+                    _isInputBlocked = true;
 
-                //in updating pointer we have already calculate all data 
-                PointerHandler.PointerStatus pointerStatus = IngamePointer.GetStatus();
+                    GridSystem.Instance.ResetMovemap();
+                    //Build path
+                    Path path = GridSystem.Instance.BuildPath(_currentCharacter.Coords, choosedPosition[0], _currentCharacter);
+                    GridSystem.Instance.PrintPath(path.NodePath);
+                    List<Vector3Int> coordPath = path.ConvertToCoordPath();
 
-                GridSystem.Instance.ResetMovemap();
-                //Build path
-                Path path = GridSystem.Instance.BuildPath(_currentCharacter.Coords, choosedPosition, _currentCharacter);
-
-                
-                GridSystem.Instance.PrintPath(path.NodePath);
-                List<Vector3Int> coordPath = path.ConvertToCoordPath();
+                    _skillData.Target = targetCharacter;
+                    _currentCharacter.ExecuteSkill(_skillNo, coordPath);
+                    end = true;
+                }
             }
+
+            if (Input.GetMouseButtonDown(1) &&
+                !EventSystem.current.IsPointerOverGameObject())
+            {
+                if (!_isInputBlocked)
+                {
+                    _isInputBlocked = true;
+
+                    //return old movemap
+                    GridSystem.Instance.ResetMovemap();
+                    GridSystem.Instance.SetMovemap(oldMovemap);
+                    GridSystem.Instance.PrintMoveMap(oldMovemap, GridSystem.Instance.GetTileStatusFromCharacter(_currentCharacter));
+                    SkillPanelRef.SkillDenied(_skillNo);
+                    _skillData = null;
+                    end = true;
+
+                    _isInputBlocked = false;
+                }
+            }
+            yield return null;
         }
     }
 }

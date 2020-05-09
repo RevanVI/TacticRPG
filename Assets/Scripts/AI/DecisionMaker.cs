@@ -53,14 +53,12 @@ public class DecisionMaker: ScriptableObject
             }
             else if (Qualifiers[i].Id == UtilityAISystem.Qualifiers.Move)
             {
-                List<Vector3Int> movemap = GridSystem.Instance.GetCurrentMovemap();
-                for (int j = 0; j < movemap.Count; ++j)
+                Movemap movemap = GridSystem.Instance.GetCurrentMovemap();
+                for (int j = 0; j < movemap.MoveCoords.Count; ++j)
                 {
-                    if (GridSystem.Instance.GetNode(movemap[j]).GetCharacter() != null)
-                        continue;
                     Decision decision = new Decision();
                     decision.Context = context.Copy();
-                    decision.Context.Target = movemap[j];
+                    decision.Context.Target = movemap.MoveCoords[j];
                     decision.QualifierRef = Qualifiers[i];
                     PossibleDecisions.Add(decision);
                 }

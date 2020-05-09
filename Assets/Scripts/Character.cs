@@ -257,6 +257,11 @@ public class Character : MonoBehaviour
         else
             return "Ally";
     }
+
+    public void ExecuteSkill(int skillNo, List<Vector3Int> path = null)
+    {
+
+    }
 }
 
 

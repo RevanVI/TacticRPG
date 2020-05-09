@@ -17,6 +17,7 @@ public class GridSystem : MonoBehaviour
     public Tile PathTile;
     public Tile AllyTile;
     public Tile EnemyTile;
+    public Tile PositionTile;
 
     private Movemap _movemap;
 
@@ -115,6 +116,10 @@ public class GridSystem : MonoBehaviour
     {
         foreach(var character in characterList)
         {
+            if (character.Properties.CurrentHealth <= 0 ||
+                GetTileStatusFromCharacter(character) == characterFraction)
+                continue;
+
             Vector3Int offsetCoords = character.Coords;
             //check all directions
             for (int i = 0; i < 4; ++i)
@@ -166,11 +171,6 @@ public class GridSystem : MonoBehaviour
         PrintMoveMap(_movemap, fraction);
     }
 
-    public bool IsMovementEnable(Vector3Int targetPosition)
-    {
-        return _movemap.IsMovementEnable(targetPosition);
-    }
-
     public void ResetMovemap()
     {
         _movemap.Clear();
@@ -202,6 +202,10 @@ public class GridSystem : MonoBehaviour
         return _movemap;
     }
 
+    public void SetMovemap(Movemap movemap)
+    {
+        _movemap = movemap;
+    }
 /*
  * Graph section
  */
