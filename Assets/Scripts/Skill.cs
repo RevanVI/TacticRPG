@@ -41,6 +41,8 @@ public class Skill: ScriptableObject
     public TargetFraction FractionTarget;
     public object Target;
 
+    public bool UseNearEnemy;
+
     public UnityEvent OnExecute = new UnityEvent();
 
     public virtual void Reset()
@@ -62,6 +64,11 @@ public class Skill: ScriptableObject
         else
             --CurrentCount;
         OnExecute.Invoke();
+    }
+
+    public virtual void AdditionalChecks(Character target, List<Vector3Int> possiblePositions)
+    {
+
     }
 }
 
