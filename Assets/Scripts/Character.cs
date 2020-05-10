@@ -64,6 +64,8 @@ public class Character : MonoBehaviour
     public List<Skill> Skills = new List<Skill>();
     private int _skillToUse = -1;
 
+    public List<Effect> ActiveEffects = new List<Effect>();
+
     private void Start()
     {
         _isMoving = false;
@@ -75,9 +77,10 @@ public class Character : MonoBehaviour
         GameController.Instance.RegisterCharacter(this);
         GridSystem.Instance.DefineCharacter(this);
 
-        foreach (var skill in Skills)
+        for (int i = 0; i < Skills.Count; ++i)
         {
-            skill.OnExecute.AddListener(OnSkillExecutionEnd);
+            Skills[i] = Instantiate(Skills[i]);
+            Skills[i].OnExecute.AddListener(OnSkillExecutionEnd);
         }
     }
 
@@ -153,6 +156,13 @@ public class Character : MonoBehaviour
 
     public void TakeDamage(int damage)
     {
+        //check if character has defence effect 
+        float damageMultiplier = 1f;
+        foreach (var effect in ActiveEffects)
+            if (effect.Type == EffectType.Defence)
+                damageMultiplier *= (float)effect.Value;
+
+        damage = (int)(damage * damageMultiplier);
         Properties.CurrentHealth -= damage;
         OnDamageTaken.Invoke(BattleId);
 
@@ -269,17 +279,47 @@ public class Character : MonoBehaviour
 
     public void ExecuteSkill(int skillNo, List<Vector3Int> path = null)
     {
+        _skillToUse = skillNo;
         if (path != null)
             Move(path);
         else
             Skills[_skillToUse].Execute();
-        _skillToUse = skillNo;
     }
 
     public void OnSkillExecutionEnd()
     {
         _skillToUse = -1;
         OnMoveEnded.Invoke();
+    }
+
+    public void ProcessEffects()
+    {
+        for (int i = 0; i < ActiveEffects.Count; ++i) 
+        {
+            ActiveEffects[i].Process();
+            if (ActiveEffects[i].Time == 0)
+            {
+                ActiveEffects.RemoveAt(i);
+                --i;
+            }
+            else
+            {
+                if (ActiveEffects[i].Type == EffectType.Damage)
+                {
+                    TakeDamage((int)ActiveEffects[i].Value);
+                    if (Properties.CurrentHealth <= 0)
+                        break;
+                }
+                else if (ActiveEffects[i].Type == EffectType.Heal)
+                    AddHP((int)ActiveEffects[i].Value);
+            }
+        }
+    }
+
+    public void ProcessSkills()
+    {
+        foreach (var skill in Skills)
+            skill.ProcessTurn();
     }
 }
 

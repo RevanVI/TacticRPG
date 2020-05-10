@@ -65,12 +65,6 @@ public class GridSystem : MonoBehaviour
         nodesToProcess.Add(currentNode);
         map.MoveCoords.Add(currentNode.Coords);
 
-        Node.TileGameStatus oppositeFraction;
-        if (fraction == Node.TileGameStatus.Ally)
-            oppositeFraction = Node.TileGameStatus.Enemy;
-        else
-            oppositeFraction = Node.TileGameStatus.Ally;
-
         while (nodesToProcess.Count != 0)
         {
             currentNode = nodesToProcess[0];
@@ -112,12 +106,13 @@ public class GridSystem : MonoBehaviour
         return map;
     }
 
-    public void DefineAvailableMeleeTargets(Movemap movemap, List<Character> characterList, Node.TileGameStatus characterFraction, int attackDistance)
+    public void DefineAvailableMeleeTargets(Movemap movemap, Character currentCharacter, List<Character> characterList, List<Node.TileGameStatus> targetFractions, int attackDistance)
     {
         foreach(var character in characterList)
         {
             if (character.Properties.CurrentHealth <= 0 ||
-                GetTileStatusFromCharacter(character) == characterFraction)
+                character == currentCharacter ||
+                !targetFractions.Contains(GetTileStatusFromCharacter(character)) )
                 continue;
 
             Vector3Int offsetCoords = character.Coords;
@@ -129,7 +124,7 @@ public class GridSystem : MonoBehaviour
                 //if tile belongs to movemap and empty than character can attack target from it
                 if (movemap.MoveCoords.IndexOf(offsetCoords) != -1)
                 {
-                    movemap.EnemyMeleeCoords.Add(character.Coords);
+                    movemap.MeleeCoords.Add(character.Coords);
                     break;
                 }
             }
@@ -156,18 +151,33 @@ public class GridSystem : MonoBehaviour
     {
         foreach (var tilePosition in movemap.MoveCoords)
             Movemap.SetTile(tilePosition, MoveTile);
-        foreach(var tilePosition in movemap.EnemyMeleeCoords)
-            Movemap.SetTile(tilePosition, EnemyTile);
+        foreach (var tilePosition in movemap.MeleeCoords)
+        {
+            if (GetNode(tilePosition).GameStatus == characterFraction)
+                Movemap.SetTile(tilePosition, AllyTile);
+            else
+                Movemap.SetTile(tilePosition, EnemyTile);
+        }
         foreach (var tilePosition in movemap.RangeCoords)
-            Movemap.SetTile(tilePosition, EnemyTile);
+        {
+            if (GetNode(tilePosition).GameStatus == characterFraction)
+                Movemap.SetTile(tilePosition, AllyTile);
+            else
+                Movemap.SetTile(tilePosition, EnemyTile);
+        }
     }
 
     public void PrintCharacterMoveMap(Character character, List<Character> characterList, int attackDistance)
     {
         Node.TileGameStatus fraction;
         fraction = GetTileStatusFromCharacter(character);
+        List<Node.TileGameStatus> fractionList = new List<Node.TileGameStatus>();
+        if (fraction == Node.TileGameStatus.Ally)
+            fractionList.Add(Node.TileGameStatus.Enemy);
+        else
+            fractionList.Add(Node.TileGameStatus.Ally);
         _movemap = BuildMovemap(fraction, character.Properties.Speed, character.Coords);
-        DefineAvailableMeleeTargets(_movemap, characterList, fraction, attackDistance);
+        DefineAvailableMeleeTargets(_movemap, character, characterList, fractionList, attackDistance);
         PrintMoveMap(_movemap, fraction);
     }
 
@@ -495,7 +505,7 @@ public class GridSystem : MonoBehaviour
                     if (endNode.HasEffect)
                     {
                         EffectTile effect = endNode.GetEffect();
-                        if (effect.Type == EffectType.Damage)
+                        if (effect.Type == EffectTileType.Damage)
                         {
                             /*
                              * maxHealth - damage
@@ -511,7 +521,7 @@ public class GridSystem : MonoBehaviour
                             else
                                 cost += 100;
                         }
-                        else if (effect.Type == EffectType.Heal)
+                        else if (effect.Type == EffectTileType.Heal)
                         {
                             /*
                              * cost reduce based on current character's health
@@ -610,6 +620,19 @@ public class GridSystem : MonoBehaviour
             return Node.TileGameStatus.Enemy;
         else
             return Node.TileGameStatus.Empty;
+    }
+
+    public static List<Node.TileGameStatus> ConvertFractionsFromStringToNode(List<string> fractionsStringList)
+    {
+        List<Node.TileGameStatus> fractionsNodeList = new List<Node.TileGameStatus>();
+        foreach(var fraction in fractionsStringList)
+        {
+            if (fraction == "Ally")
+                fractionsNodeList.Add(Node.TileGameStatus.Ally);
+            else if (fraction == "Enemy")
+                fractionsNodeList.Add(Node.TileGameStatus.Enemy);
+        }
+        return fractionsNodeList;
     }
 
     public Character GetCharacterFromCoords(Vector3Int coords)

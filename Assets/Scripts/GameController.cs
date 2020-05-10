@@ -101,7 +101,7 @@ public class GameController : MonoBehaviour
             targetCharacter.tag == _currentCharacter.GetOppositeFraction())
         {
             //cursor in melee attack
-            if (GridSystem.Instance.GetCurrentMovemap().EnemyMeleeCoords.Contains(tilePosition) &&
+            if (GridSystem.Instance.GetCurrentMovemap().MeleeCoords.Contains(tilePosition) &&
                 (_currentCharacter.Properties.Class == CharacterClass.Warrior ||
                  _currentCharacter.Properties.Class == CharacterClass.Healer ||
                  AvailableRangedTargets.Count == 0 || //enemy nearby or no missiles 
@@ -252,6 +252,8 @@ public class GameController : MonoBehaviour
         }
         ++TurnCount;
         OnTurnStart.Invoke();
+        _currentCharacter.ProcessEffects();
+        _currentCharacter.ProcessSkills();
         SkillPanelRef.SetSkills(_currentCharacter);
         if (_currentCharacter.gameObject.CompareTag("Enemy"))
         {
@@ -284,7 +286,7 @@ public class GameController : MonoBehaviour
     private void StartEnemyTurn()
     {
         State = GameState.EnemyTurn;
-        GridSystem.Instance.PrintCharacterMoveMap(_currentCharacter, CharacterList, 0);
+        GridSystem.Instance.PrintCharacterMoveMap(_currentCharacter, CharacterList, 1);
         GridSystem.Instance.UpdateInfluenceMap(CharacterList);
 
         if ((_currentCharacter.Properties.Class == CharacterClass.Archer ||
@@ -389,7 +391,7 @@ public class GameController : MonoBehaviour
         foreach (var otherCharacter in CharacterList)
         {
             //ignore ally and dead characters
-            if (!otherCharacter.CompareTag(character.tag) && otherCharacter.Properties.CurrentHealth >= 0)
+            if (!otherCharacter.CompareTag(character.tag) && otherCharacter.Properties.CurrentHealth > 0)
             {
                 Vector3 direction = (otherCharacter.transform.position - character.transform.position).normalized;
                 float distanceBetweenCharacters = (otherCharacter.transform.position - character.transform.position).magnitude;
@@ -458,12 +460,16 @@ public class GameController : MonoBehaviour
     {
         _skillNo = skillNo;
         _skillData = _currentCharacter.Skills[skillNo];
-        if (_skillData.TypeUse == Skill.UseType.Melee)
+        if (_skillData.TypeTarget == Skill.TargetType.Self)
+            StartCoroutine(SelfSkillProcess());
+        else if (_skillData.TypeUse == Skill.UseType.Melee)
         {
             StartCoroutine(MeleeSkillProcess());
         }
-
-        //_currentCharacter.Skills[skillNo].Execute();
+        else if (_skillData.TypeUse == Skill.UseType.Randged)
+        {
+            StartCoroutine(RangeSkillProcess());
+        }
     }
 
     public IEnumerator MeleeSkillProcess()
@@ -473,11 +479,29 @@ public class GameController : MonoBehaviour
         //skill can be denied so we need to save the data
         Movemap oldMovemap = GridSystem.Instance.GetCurrentMovemap().Copy();
 
-        //print new skill movemap
+        //define list of target fractions
+        List<string> fractionList = new List<string>();
+        if (_skillData.FractionTarget == Skill.TargetFraction.Enemy)
+            fractionList.Add(_currentCharacter.GetOppositeFraction());
+        else if (_skillData.FractionTarget == Skill.TargetFraction.Ally)
+            fractionList.Add(_currentCharacter.tag);
+        else
+        {
+            fractionList.Add(_currentCharacter.GetOppositeFraction());
+            fractionList.Add(_currentCharacter.tag);
+        }
+
         GridSystem.Instance.ResetMovemap();
-        Movemap skillMovemap = new Movemap();
-        skillMovemap.MoveCoords.AddRange(oldMovemap.MoveCoords);
-        GridSystem.Instance.DefineAvailableMeleeTargets(skillMovemap, CharacterList, GridSystem.Instance.GetTileStatusFromCharacter(_currentCharacter), _skillData.Distance);
+        //define all data
+
+        //define all melee target
+        Movemap skillMovemap = new Movemap();                                                                            
+        skillMovemap.MoveCoords.AddRange(oldMovemap.MoveCoords);   
+        GridSystem.Instance.DefineAvailableMeleeTargets(skillMovemap, _currentCharacter, CharacterList, GridSystem.ConvertFractionsFromStringToNode(fractionList), _skillData.Distance);
+
+        //define all positions to attack for all targets
+
+
         GridSystem.Instance.PrintMoveMap(skillMovemap, GridSystem.Instance.GetTileStatusFromCharacter(_currentCharacter));
 
         List<Vector3Int> choosedPosition = new List<Vector3Int>();
@@ -491,8 +515,9 @@ public class GameController : MonoBehaviour
             Character targetCharacter = GridSystem.Instance.GetCharacterFromCoords(tilePosition);
 
             if (targetCharacter != null &&
-                targetCharacter.tag == _currentCharacter.GetOppositeFraction() &&
-                skillMovemap.EnemyMeleeCoords.Contains(tilePosition))
+                targetCharacter != _currentCharacter &&
+                //fractionList.Contains(targetCharacter.tag) &&
+                skillMovemap.MeleeCoords.Contains(tilePosition))
             {
                 Vector2 relativeMousePosition = GridSystem.Instance.GetRelativePointPositionInTile(GridSystem.Instance.PathfindingMap,
                                                                                                    tilePosition,
@@ -567,7 +592,6 @@ public class GameController : MonoBehaviour
                     GridSystem.Instance.SetMovemap(oldMovemap);
                     GridSystem.Instance.PrintMoveMap(oldMovemap, GridSystem.Instance.GetTileStatusFromCharacter(_currentCharacter));
                     SkillPanelRef.SkillDenied(_skillNo);
-                    _skillData = null;
                     end = true;
 
                     _isInputBlocked = false;
@@ -575,7 +599,184 @@ public class GameController : MonoBehaviour
             }
             yield return null;
         }
+        _skillData = null;
     }
+
+    public IEnumerator SelfSkillProcess()
+    {
+        bool end = false;
+
+        //skill can be denied so we need to save the data
+        Movemap oldMovemap = GridSystem.Instance.GetCurrentMovemap().Copy();
+
+        //print new skill movemap                 
+        //in this case we need to print only current character tile
+        GridSystem.Instance.ResetMovemap();
+        List<Vector3Int> coordsList = new List<Vector3Int>();
+        coordsList.Add(_currentCharacter.Coords);
+        GridSystem.Instance.PrintMovemapTiles(coordsList, GridSystem.Instance.AllyTile);
+        while (!end)
+        {
+            if (Input.GetMouseButtonDown(0) &&
+                !EventSystem.current.IsPointerOverGameObject())
+            {
+                if (!_isInputBlocked)
+                {
+                    _isInputBlocked = true;
+
+                    GridSystem.Instance.ResetMovemap();
+                    _skillData.Target = _currentCharacter;
+                    _currentCharacter.ExecuteSkill(_skillNo, null);
+                    end = true;
+                }
+            }
+
+            if (Input.GetMouseButtonDown(1) &&
+                !EventSystem.current.IsPointerOverGameObject())
+            {
+                if (!_isInputBlocked)
+                {
+                    _isInputBlocked = true;
+
+                    //return old movemap
+                    GridSystem.Instance.ResetMovemap();
+                    GridSystem.Instance.SetMovemap(oldMovemap);
+                    GridSystem.Instance.PrintMoveMap(oldMovemap, GridSystem.Instance.GetTileStatusFromCharacter(_currentCharacter));
+                    SkillPanelRef.SkillDenied(_skillNo);
+                    end = true;
+
+                    _isInputBlocked = false;
+                }
+            }
+            yield return null;
+        }
+        _skillData = null;
+    }
+
+    public IEnumerator RangeSkillProcess()
+    {
+        bool end = false;
+
+        //skill can be denied so we need to save the data
+        Movemap oldMovemap = GridSystem.Instance.GetCurrentMovemap().Copy();
+
+        //define list of target fractions
+        List<string> fractionList = new List<string>();
+        if (_skillData.FractionTarget == Skill.TargetFraction.Enemy)
+            fractionList.Add(_currentCharacter.GetOppositeFraction());
+        else if (_skillData.FractionTarget == Skill.TargetFraction.Ally)
+            fractionList.Add(_currentCharacter.tag);
+        else
+        {
+            fractionList.Add(_currentCharacter.GetOppositeFraction());
+            fractionList.Add(_currentCharacter.tag);
+        }
+
+        //print new skill movemap                                                               
+        GridSystem.Instance.ResetMovemap();
+        Movemap skillMovemap = new Movemap();
+        skillMovemap.MoveCoords.AddRange(oldMovemap.MoveCoords);
+        GridSystem.Instance.DefineAvailableMeleeTargets(skillMovemap, _currentCharacter, CharacterList, GridSystem.ConvertFractionsFromStringToNode(fractionList), _skillData.Distance);
+        GridSystem.Instance.PrintMoveMap(skillMovemap, GridSystem.Instance.GetTileStatusFromCharacter(_currentCharacter));
+
+        List<Vector3Int> choosedPosition = new List<Vector3Int>();
+        bool isNeedToRepaintMovemap = false;
+
+        while (!end)
+        {
+            //define where player points
+            Vector3 worldPosition = IngamePointer.transform.position;
+            Vector3Int tilePosition = GridSystem.Instance.GetTilemapCoordsFromWorld(GridSystem.Instance.PathfindingMap, worldPosition);
+            Character targetCharacter = GridSystem.Instance.GetCharacterFromCoords(tilePosition);
+
+            if (targetCharacter != null &&
+                targetCharacter != _currentCharacter &&
+                //fractionList.Contains(targetCharacter.tag) &&
+                skillMovemap.MeleeCoords.Contains(tilePosition))
+            {
+                Vector2 relativeMousePosition = GridSystem.Instance.GetRelativePointPositionInTile(GridSystem.Instance.PathfindingMap,
+                                                                                                   tilePosition,
+                                                                                                   worldPosition);
+                List<Vector3Int> possiblePositions = GridSystem.Instance.DefinePositionsToAttackTarget(skillMovemap, targetCharacter, _skillData.Distance);
+
+                List<PointerHandler.PointerStatus> directionsList = new List<PointerHandler.PointerStatus>();
+                foreach (var nearTileCoords in possiblePositions)
+                {
+                    Vector3Int offset = tilePosition - nearTileCoords;
+                    if (offset.x < 0)
+                        directionsList.Add(PointerHandler.PointerStatus.RightAttack);
+                    else if (offset.x > 0)
+                        directionsList.Add(PointerHandler.PointerStatus.LeftAttack);
+                    else if (offset.y < 0)
+                        directionsList.Add(PointerHandler.PointerStatus.TopAttack);
+                    else
+                        directionsList.Add(PointerHandler.PointerStatus.BottomAttack);
+                }
+
+                int currentDirectionIndex = -1;
+                IngamePointer.DefineSprite(relativeMousePosition, directionsList, out currentDirectionIndex);
+
+                //print current character attack position
+                if (choosedPosition.Count != 0)
+                    GridSystem.Instance.PrintMovemapTiles(choosedPosition, GridSystem.Instance.MoveTile);
+                choosedPosition.Clear();
+                choosedPosition.Add(possiblePositions[currentDirectionIndex]);
+                isNeedToRepaintMovemap = true;
+                GridSystem.Instance.PrintMovemapTiles(choosedPosition, GridSystem.Instance.PositionTile);
+            }
+            else
+            {
+                IngamePointer.SetSprite(PointerHandler.PointerStatus.Normal);
+                if (isNeedToRepaintMovemap)
+                {
+                    GridSystem.Instance.PrintMovemapTiles(choosedPosition, GridSystem.Instance.MoveTile);
+                    isNeedToRepaintMovemap = false;
+                    choosedPosition.Clear();
+                }
+            }
+
+            if (Input.GetMouseButtonDown(0) &&
+                !EventSystem.current.IsPointerOverGameObject() &&
+                IngamePointer.GetStatus() != PointerHandler.PointerStatus.Normal)
+            {
+                if (!_isInputBlocked)
+                {
+                    _isInputBlocked = true;
+
+                    GridSystem.Instance.ResetMovemap();
+                    //Build path
+                    Path path = GridSystem.Instance.BuildPath(_currentCharacter.Coords, choosedPosition[0], _currentCharacter);
+                    GridSystem.Instance.PrintPath(path.NodePath);
+                    List<Vector3Int> coordPath = path.ConvertToCoordPath();
+
+                    _skillData.Target = targetCharacter;
+                    _currentCharacter.ExecuteSkill(_skillNo, coordPath);
+                    end = true;
+                }
+            }
+
+            if (Input.GetMouseButtonDown(1) &&
+                !EventSystem.current.IsPointerOverGameObject())
+            {
+                if (!_isInputBlocked)
+                {
+                    _isInputBlocked = true;
+
+                    //return old movemap
+                    GridSystem.Instance.ResetMovemap();
+                    GridSystem.Instance.SetMovemap(oldMovemap);
+                    GridSystem.Instance.PrintMoveMap(oldMovemap, GridSystem.Instance.GetTileStatusFromCharacter(_currentCharacter));
+                    SkillPanelRef.SkillDenied(_skillNo);
+                    end = true;
+
+                    _isInputBlocked = false;
+                }
+            }
+            yield return null;
+        }
+        _skillData = null;
+    }
+
 }
 
 

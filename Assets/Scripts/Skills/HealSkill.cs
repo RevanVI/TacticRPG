@@ -15,16 +15,6 @@ public class HealSkill : Skill
 
         ((Character)Target).TakeDamage(Value);
 
-        if (Cooldown > 0)
-        {
-            if (CurrentCooldown > 0)
-                --CurrentCooldown;
-            else
-                CurrentCooldown = Cooldown;
-        }
-        else
-            --CurrentCount;
-            
-        OnExecute.Invoke();
+        base.Execute();
     }
 }

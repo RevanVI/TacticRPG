@@ -49,9 +49,19 @@ public class Skill: ScriptableObject
         CurrentCount = 0;
     }
 
+    public virtual void ProcessTurn()
+    {
+        if (CurrentCooldown > 0)
+            --CurrentCooldown;
+    }
+
     public virtual void Execute()
     {
-
+        if (Cooldown > 0)
+            CurrentCooldown = Cooldown + 1;
+        else
+            --CurrentCount;
+        OnExecute.Invoke();
     }
 }
 

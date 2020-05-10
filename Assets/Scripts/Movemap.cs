@@ -5,13 +5,14 @@ using UnityEngine;
 public class Movemap
 {
     public List<Vector3Int> MoveCoords;
-    public List<Vector3Int> EnemyMeleeCoords;
+    public List<Vector3Int> MeleeCoords;
+    //public List<Vector3Int>
     public List<Vector3Int> RangeCoords;
 
     public Movemap()
     {
         MoveCoords = new List<Vector3Int>();
-        EnemyMeleeCoords = new List<Vector3Int>();
+        MeleeCoords = new List<Vector3Int>();
         RangeCoords = new List<Vector3Int>();
     }
 
@@ -25,7 +26,7 @@ public class Movemap
     public bool IsCoordsInMovemap(Vector3Int targetPosition)
     {
         if (MoveCoords.IndexOf(targetPosition) != -1 ||
-            EnemyMeleeCoords.IndexOf(targetPosition) != -1 ||
+            MeleeCoords.IndexOf(targetPosition) != -1 ||
             RangeCoords.IndexOf(targetPosition) != -1)
             return true;
         return false;
@@ -34,7 +35,7 @@ public class Movemap
     public void Clear()
     {
         MoveCoords.Clear();
-        EnemyMeleeCoords.Clear();
+        MeleeCoords.Clear();
         RangeCoords.Clear();
     }
 
@@ -46,16 +47,15 @@ public class Movemap
         }
         else 
         {
-            return EnemyMeleeCoords;
+            return MeleeCoords;
         }
-        return null;
     }
 
     public Movemap Copy()
     {
         Movemap newMovemap = new Movemap();
         newMovemap.MoveCoords.AddRange(MoveCoords);
-        newMovemap.EnemyMeleeCoords.AddRange(EnemyMeleeCoords);
+        newMovemap.MeleeCoords.AddRange(MeleeCoords);
         newMovemap.RangeCoords.AddRange(RangeCoords);
         return newMovemap;
     }

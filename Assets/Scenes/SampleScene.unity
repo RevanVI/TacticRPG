@@ -242,7 +242,7 @@ PrefabInstance:
     - target: {fileID: 8744826376382252233, guid: 697d541291174e347b5b852f67a9630f,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 1.2
+      value: 3.4
       objectReference: {fileID: 0}
     - target: {fileID: 8744826376382252233, guid: 697d541291174e347b5b852f67a9630f,
         type: 3}
@@ -322,7 +322,7 @@ PrefabInstance:
     - target: {fileID: 8744826376382252232, guid: 697d541291174e347b5b852f67a9630f,
         type: 3}
       propertyPath: Skills.Array.size
-      value: 1
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 8744826376382252232, guid: 697d541291174e347b5b852f67a9630f,
         type: 3}
@@ -385,6 +385,12 @@ PrefabInstance:
       propertyPath: Skills.Array.data[0]
       value: 
       objectReference: {fileID: 11400000, guid: 8ea141e71188b294dbdee62fee34a8f2,
+        type: 2}
+    - target: {fileID: 8744826376382252232, guid: 697d541291174e347b5b852f67a9630f,
+        type: 3}
+      propertyPath: Skills.Array.data[1]
+      value: 
+      objectReference: {fileID: 11400000, guid: 97b8cd1a2116f2342bd7276f7d6f6065,
         type: 2}
     - target: {fileID: 8744826376382252233, guid: 697d541291174e347b5b852f67a9630f,
         type: 3}
@@ -5764,7 +5770,7 @@ MonoBehaviour:
     MaxMissiles: 0
     CurrentMissiles: 0
   BattleId: 0
-  Coords: {x: -1, y: 1, z: 0}
+  Coords: {x: -1, y: 2, z: 0}
   TargetPath: []
   OnMoveEnded:
     m_PersistentCalls:
@@ -5880,6 +5886,16 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 1758616479}
     m_Modifications:
+    - target: {fileID: 2112025350188488478, guid: 703dfe5dcdb20b6409dcfc17b945846a,
+        type: 3}
+      propertyPath: Id
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 2112025351486169007, guid: 703dfe5dcdb20b6409dcfc17b945846a,
+        type: 3}
+      propertyPath: Id
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 4724008681812123864, guid: 703dfe5dcdb20b6409dcfc17b945846a,
         type: 3}
       propertyPath: m_Name
@@ -6361,7 +6377,7 @@ PrefabInstance:
     - target: {fileID: 8744826376382252232, guid: 697d541291174e347b5b852f67a9630f,
         type: 3}
       propertyPath: Coords.y
-      value: -1
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 8744826376382252233, guid: 697d541291174e347b5b852f67a9630f,
         type: 3}
@@ -6371,7 +6387,7 @@ PrefabInstance:
     - target: {fileID: 8744826376382252233, guid: 697d541291174e347b5b852f67a9630f,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: -0.75
+      value: 4.27
       objectReference: {fileID: 0}
     - target: {fileID: 8744826376382252233, guid: 697d541291174e347b5b852f67a9630f,
         type: 3}

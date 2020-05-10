@@ -9,21 +9,22 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 90c3ed208d89c1d49bc7a098ca0585a0, type: 3}
-  m_Name: HealSkill
+  m_Script: {fileID: 11500000, guid: ed9c200f99b607a4880007101ca1d42b, type: 3}
+  m_Name: DefenceSkill
   m_EditorClassIdentifier: 
-  Name: Heal
-  SkillImage: {fileID: -4045741745079397469, guid: 92774b571ea790946a0e94204dc43ee3,
+  Name: Defence
+  SkillImage: {fileID: -7034185583429119738, guid: c04b759b6c9d3544f82f8e39085240af,
     type: 3}
   TypeUse: 0
-  Distance: 2
-  Cooldown: 2
+  Distance: 0
+  Cooldown: 3
   CurrentCooldown: 0
   Count: 0
   CurrentCount: 0
-  TypeTarget: 0
+  TypeTarget: 3
   FractionTarget: 0
   OnExecute:
     m_PersistentCalls:
       m_Calls: []
-  Value: 20
+  Value: 0.75
+  Time: 2

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum EffectType
+public enum EffectTileType
 {
     Damage = 0,
     Heal = 1,
@@ -21,7 +21,7 @@ public class EffectTile : MonoBehaviour
      */
     public int Lifetime;
 
-    public EffectType Type;
+    public EffectTileType Type;
     public int Value;
     //calls then effect placed on tile
     public void StartEffect()
