@@ -8,7 +8,8 @@ public class TargetHPAfterDamage : ConsiderationBase
     public override float Score(ContextBase context)
     {
         Character targetCharacter = (Character)context.Target;
-        int currentHP = targetCharacter.Properties.CurrentHealth - context.Provider.GetControlledCharacter().Properties.MeleeDamage;
+        Character currentCharacter = context.Provider.GetControlledCharacter();
+        int currentHP = targetCharacter.Properties.CurrentHealth - currentCharacter.CalculateDamage(currentCharacter.Properties.MeleeDamage);
         if (currentHP < 0)
             currentHP = 0;
         return ((float)currentHP) / targetCharacter.Properties.Health;

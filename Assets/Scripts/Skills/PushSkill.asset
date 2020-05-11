@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1ac2d2442caefca4987cea334bc1dd2c, type: 3}
+  m_Name: PushSkill
+  m_EditorClassIdentifier: 
+  Name: PushSkill
+  SkillImage: {fileID: -4062155650071244391, guid: c04b759b6c9d3544f82f8e39085240af,
+    type: 3}
+  TypeUse: 0
+  Distance: 1
+  Cooldown: 3
+  CurrentCooldown: 0
+  Count: 0
+  CurrentCount: 0
+  User: {fileID: 0}
+  TypeTarget: 0
+  FractionTarget: 2
+  UseNearEnemy: 0
+  OnExecute:
+    m_PersistentCalls:
+      m_Calls: []
+  Value: 2
+  Time: 0

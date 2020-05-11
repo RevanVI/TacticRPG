@@ -390,7 +390,7 @@ PrefabInstance:
         type: 3}
       propertyPath: Skills.Array.data[1]
       value: 
-      objectReference: {fileID: 11400000, guid: 97b8cd1a2116f2342bd7276f7d6f6065,
+      objectReference: {fileID: 11400000, guid: f9b667429ccb80c4e9b20ccc4b81c1a1,
         type: 2}
     - target: {fileID: 8744826376382252233, guid: 697d541291174e347b5b852f67a9630f,
         type: 3}
@@ -5682,7 +5682,8 @@ MonoBehaviour:
   BattleId: 0
   Coords: {x: -2, y: -2, z: 0}
   TargetPath: []
-  OnMoveEnded:
+  WaitForCallback: 0
+  OnActionsEnded:
     m_PersistentCalls:
       m_Calls: []
   Skills: []
@@ -5772,7 +5773,8 @@ MonoBehaviour:
   BattleId: 0
   Coords: {x: -1, y: 2, z: 0}
   TargetPath: []
-  OnMoveEnded:
+  WaitForCallback: 0
+  OnActionsEnded:
     m_PersistentCalls:
       m_Calls: []
   Skills: []

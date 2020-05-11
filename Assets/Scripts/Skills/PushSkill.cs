@@ -13,7 +13,7 @@ public class PushSkill : Skill
         //we need open tile in possible direction after target
         for (int i = 0; i < possiblePositions.Count; ++i)
         {
-            Vector3Int targetMoveCoords = target.Coords + (possiblePositions[i] - target.Coords);
+            Vector3Int targetMoveCoords = target.Coords + (target.Coords - possiblePositions[i]);
             if (GridSystem.Instance.GetNode(targetMoveCoords).GameStatus != Node.TileGameStatus.Empty)
             {
                 possiblePositions.RemoveAt(i);
@@ -24,6 +24,19 @@ public class PushSkill : Skill
 
     public override void Execute()
     {
+        User.WaitForCallback = true;
+        Vector3Int currentCharacterCoords = User.Coords;
+        Vector3Int targetCharacterCoords = ((Character)Target).Coords;
+
+        List<Vector3Int> targetPathList = new List<Vector3Int>();
+        targetPathList.Add(targetCharacterCoords + (targetCharacterCoords - currentCharacterCoords));
+
+        ((Character)Target).Move(targetPathList, User);
+
+        Effect stunEffect = new Effect();
+        stunEffect.Time = Value + 1;
+        stunEffect.Type = EffectType.Stun;
+        ((Character)Target).ActiveEffects.Add(stunEffect);
         
 
         base.Execute();

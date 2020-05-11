@@ -8,7 +8,8 @@ public class TargetHPAfterRangeAttack : ConsiderationBase
     public override float Score(ContextBase context)
     {
         Character targetCharacter = (Character)context.Target;
-        int currentHP = targetCharacter.Properties.CurrentHealth - context.Provider.GetControlledCharacter().Properties.RangedDamage;
+        Character currentCharacter = context.Provider.GetControlledCharacter();
+        int currentHP = targetCharacter.Properties.CurrentHealth - currentCharacter.CalculateDamage(currentCharacter.Properties.RangedDamage);
         if (currentHP < 0)
             currentHP = 0;
         return ((float)currentHP) / targetCharacter.Properties.Health;

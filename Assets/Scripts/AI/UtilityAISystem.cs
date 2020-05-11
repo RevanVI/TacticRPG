@@ -9,5 +9,6 @@ public static class UtilityAISystem
         MeleeAttack = 1,
         RangedAttack = 2,
         Move = 3,
+        Skill = 4,
     }
 }

@@ -178,15 +178,13 @@ public class GameController : MonoBehaviour
                         //Build path
                         Path path = GridSystem.Instance.BuildPath(_currentCharacter.Coords, targetMoveCoords, _currentCharacter);
                         GridSystem.Instance.PrintPath(path.NodePath);
-                        if (pointerStatus != PointerHandler.PointerStatus.Normal)
-                            path.NodePath.Add(GridSystem.Instance.GetNode(tilePosition));
                         List<Vector3Int> coordPath = path.ConvertToCoordPath();
 
                         //there is two options: attack or movement
                         if (targetCharacter == null)
                             _currentCharacter.Move(coordPath);
                         else
-                            _currentCharacter.Move(coordPath, targetCharacter);
+                            _currentCharacter.AttackMelee(targetCharacter, coordPath);
                     }
                     else
                         _isInputBlocked = false;
@@ -256,6 +254,8 @@ public class GameController : MonoBehaviour
         _currentCharacter.ProcessEffects();
         _currentCharacter.ProcessSkills();
         SkillPanelRef.SetSkills(_currentCharacter);
+        if (_currentCharacter.IsStunned())
+            EndTurn();
         if ((_currentCharacter.Properties.Class == CharacterClass.Archer ||
             _currentCharacter.Properties.Class == CharacterClass.Mage) &&
             !IsThereEnemyNearby(_currentCharacter))
@@ -315,7 +315,7 @@ public class GameController : MonoBehaviour
             character.BattleId = _battleIdCounter;
             ++_battleIdCounter;
             CharacterList.Add(character);
-            character.OnMoveEnded.AddListener(EndTurn);
+            character.OnActionsEnded.AddListener(EndTurn);
             character.OnDamageTaken.AddListener(OnCharacterTakeDamage);
             character.OnDie.AddListener(OnCharacterDie);
         }
@@ -325,7 +325,8 @@ public class GameController : MonoBehaviour
     {
         GridSystem.Instance.ResetMovemap();
         AvailableRangedTargets.Clear();
-        TurnQueue.Add(_currentCharacter);
+        if (_currentCharacter.Properties.CurrentHealth > 0)
+            TurnQueue.Add(_currentCharacter);
         OnTurnEnd.Invoke();
         bool isGameEnded = false;
         if (_isEndgameCheckNeeded != "")
@@ -362,6 +363,8 @@ public class GameController : MonoBehaviour
                                 return otherCharacter == character;
                             });
         _isEndgameCheckNeeded = character.tag;
+        if (_currentCharacter == character)
+            EndTurn();
     }
 
     public List<Vector3Int> DefineAvailableRangedTargets(Character character, string fraction)

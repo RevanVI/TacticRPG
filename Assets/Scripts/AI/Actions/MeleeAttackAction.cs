@@ -13,8 +13,8 @@ public class MeleeAttackAction : ActionBase
         Vector3Int attackTileCoords = (Vector3Int)Context.Data["AttackTile"];
 
         Path path = GridSystem.Instance.BuildPath(currentCharacter.Coords, attackTileCoords, currentCharacter);
+        GridSystem.Instance.PrintPath(path.NodePath);
         List<Vector3Int> coordsPath = path.ConvertToCoordPath();
-        coordsPath.Add(((Character)Context.Target).Coords);
-        currentCharacter.Move(coordsPath, (Character)Context.Target);
+        currentCharacter.AttackMelee((Character)Context.Target, coordsPath);
     }
 }

@@ -7,6 +7,7 @@ public enum EffectType
     Defence = 0,
     Heal = 1,
     Damage = 2,
+    Stun = 3,
 }
 
 public class Effect

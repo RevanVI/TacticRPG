@@ -37,6 +37,8 @@ public class Skill: ScriptableObject
     public int Count;
     public int CurrentCount;
 
+    public Character User;
+
     public TargetType TypeTarget;
     public TargetFraction FractionTarget;
     public object Target;

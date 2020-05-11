@@ -75,6 +75,30 @@ public class DecisionMaker: ScriptableObject
                     PossibleDecisions.Add(decision);
                 }
             }
+            else if (Qualifiers[i].Id == UtilityAISystem.Qualifiers.Skill)
+            {
+                foreach (var skill in context.Provider.GetControlledCharacter().Skills)
+                {
+                    /*
+                    if (skill.TypeTarget == Skill.TargetType.Self)
+                    {
+                        Decision decision = new Decision();
+                        decision.Context = context.Copy();
+                        decision.QualifierRef = Qualifiers[i];
+                        PossibleDecisions.Add(decision);
+                    }
+                        StartCoroutine(SelfSkillProcess());
+                    else if (skill.TypeUse == Skill.UseType.Melee)
+                    {
+                        StartCoroutine(MeleeSkillProcess());
+                    }
+                    else if (skill.TypeUse == Skill.UseType.Randged)
+                    {
+                        StartCoroutine(RangeSkillProcess());
+                    }
+                    */
+                }
+            }
         }
     }
 

@@ -54,10 +54,13 @@ public class Character : MonoBehaviour
     public List<Vector3Int> TargetPath;
 
     private Rigidbody2D _rb2d;
+    private BoxCollider2D _collider;
     private bool _isMoving;
     private Character _attackedCharacter;
+    private Character _callbackCharacter;
+    public bool WaitForCallback = false;
 
-    public UnityEvent OnMoveEnded;
+    public UnityEvent OnActionsEnded;
     public UnityIntEvent OnDamageTaken;
     public UnityIntEvent OnDie;
 
@@ -70,6 +73,7 @@ public class Character : MonoBehaviour
     {
         _isMoving = false;
         _rb2d = GetComponent<Rigidbody2D>();
+        _collider = GetComponent<BoxCollider2D>();
 
         OnDamageTaken = new UnityIntEvent();
         OnDie = new UnityIntEvent();
@@ -81,6 +85,7 @@ public class Character : MonoBehaviour
         {
             Skills[i] = Instantiate(Skills[i]);
             Skills[i].OnExecute.AddListener(OnSkillExecutionEnd);
+            Skills[i].User = this;
         }
     }
 
@@ -109,42 +114,26 @@ public class Character : MonoBehaviour
                 {
                     _isMoving = false;
                     GridSystem.Instance.AddCharacterToNode(Coords, this);
-                    if (_skillToUse != -1)
-                        Skills[_skillToUse].Execute();
-                    else
-                        OnMoveEnded.Invoke();
+                    CheckEndActions();
                 }
                 else
                 {
                     _targetCoords = TargetPath[0];
                     TargetPath.RemoveAt(0);
-                    if (_attackedCharacter != null && TargetPath.Count == 0)
-                    {
-                        _isMoving = false;
-                        GridSystem.Instance.AddCharacterToNode(Coords, this);
-                        StartCoroutine(AnimateMeleeAttack());
-                    }
                 }
             }
         }
     }
 
-    public void Move(List<Vector3Int> path, Character attackedCharacter = null)
+    public void Move(List<Vector3Int> path, Character mover = null)
     {
-        _attackedCharacter = attackedCharacter;
         TargetPath = path;
         _targetCoords = TargetPath[0];
         TargetPath.RemoveAt(0);
-        if (TargetPath.Count == 0 && attackedCharacter != null)
-        {
-            //attacking near enemy
-            StartCoroutine(AnimateMeleeAttack());
-        }
-        else
-        {
-            GridSystem.Instance.RemoveCharacterFromNode(Coords, this);
-            _isMoving = true;
-        }
+        GridSystem.Instance.RemoveCharacterFromNode(Coords, this);
+
+        _callbackCharacter = mover;
+        _isMoving = true;
     }
 
     //Stop movement
@@ -154,7 +143,7 @@ public class Character : MonoBehaviour
         TargetPath.Clear();
     }
 
-    public void TakeDamage(int damage)
+    public int CalculateDamage(int damage)
     {
         //check if character has defence effect 
         float damageMultiplier = 1f;
@@ -162,7 +151,12 @@ public class Character : MonoBehaviour
             if (effect.Type == EffectType.Defence)
                 damageMultiplier *= (float)effect.Value;
 
-        damage = (int)(damage * damageMultiplier);
+        return (int)(damage * damageMultiplier);
+    }
+
+    public void TakeDamage(int damage)
+    {
+        damage = CalculateDamage(damage);
         Properties.CurrentHealth -= damage;
         OnDamageTaken.Invoke(BattleId);
 
@@ -185,6 +179,7 @@ public class Character : MonoBehaviour
 
     public IEnumerator AnimateMeleeAttack()
     {
+        _collider.enabled = false;
 
         float curTime = 0;
         bool end = false;
@@ -220,8 +215,9 @@ public class Character : MonoBehaviour
             }
         }
 
+        _collider.enabled = true;
         _attackedCharacter = null;
-        OnMoveEnded.Invoke();
+        OnActionsEnded.Invoke();
     }
 
     public void AttackAtRange(Character attackedCharacter)
@@ -252,7 +248,7 @@ public class Character : MonoBehaviour
         GridSystem.Instance.ResetMovemap();
         attackedCharacter.TakeDamage(Properties.RangedDamage);
         --Properties.CurrentMissiles;
-        OnMoveEnded.Invoke();
+        OnActionsEnded.Invoke();
     }
 
     public static string GetStringClassName(CharacterClass characterClass)
@@ -277,10 +273,21 @@ public class Character : MonoBehaviour
             return "Ally";
     }
 
+    public void AttackMelee(Character targetCharacter, List<Vector3Int> path = null)
+    {
+        _attackedCharacter = targetCharacter;
+        if (path.Count == 0 || path == null)
+        {
+            StartCoroutine(AnimateMeleeAttack());
+        }
+        else
+            Move(path);
+    }
+
     public void ExecuteSkill(int skillNo, List<Vector3Int> path = null)
     {
         _skillToUse = skillNo;
-        if (path != null)
+        if (path != null && path.Count != 0)
             Move(path);
         else
             Skills[_skillToUse].Execute();
@@ -288,8 +295,11 @@ public class Character : MonoBehaviour
 
     public void OnSkillExecutionEnd()
     {
-        _skillToUse = -1;
-        OnMoveEnded.Invoke();
+        if (!WaitForCallback)
+        {
+            _skillToUse = -1;
+            OnActionsEnded.Invoke();
+        }
     }
 
     public void ProcessEffects()
@@ -320,6 +330,40 @@ public class Character : MonoBehaviour
     {
         foreach (var skill in Skills)
             skill.ProcessTurn();
+    }
+
+    public bool IsStunned()
+    {
+        foreach (var effect in ActiveEffects)
+            if (effect.Type == EffectType.Stun)
+                return true;
+        return false;
+    }
+
+    public void CheckEndActions()
+    {
+        if (_skillToUse != -1)
+            Skills[_skillToUse].Execute();
+        else if (_attackedCharacter != null)
+        {
+            StartCoroutine(AnimateMeleeAttack());
+        }
+        else if (_callbackCharacter != null)
+        {
+            _callbackCharacter.ProcessCallbackFromTargetCharacter();
+        }
+        else
+            OnActionsEnded.Invoke();
+    }
+
+    public void ProcessCallbackFromTargetCharacter()
+    {
+        if (_skillToUse != -1)
+        {
+            _skillToUse = -1;
+        }
+        WaitForCallback = false;
+        OnActionsEnded.Invoke();
     }
 }
 
