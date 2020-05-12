@@ -13,7 +13,7 @@ public class HealSkill : Skill
         //Character targetCharacter = (Character)Target;
         //targetCharacter.AddHP(Value);
 
-        ((Character)Target).TakeDamage(Value);
+        ((Character)Target).AddHP(Value);
 
         base.Execute();
     }

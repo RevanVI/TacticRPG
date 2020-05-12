@@ -251,17 +251,17 @@ MonoBehaviour:
           inWeight: 0
           outWeight: 0
         - serializedVersion: 3
-          time: 0.21865028
-          value: 0.69325566
-          inSlope: 1.0914855
-          outSlope: 1.0914855
+          time: 0.20198005
+          value: 0.6743958
+          inSlope: 0.85217565
+          outSlope: 0.85217565
           tangentMode: 0
           weightedMode: 0
           inWeight: 0.1633243
-          outWeight: 0.04099528
+          outWeight: 0.06539512
         - serializedVersion: 3
           time: 1
-          value: 1
+          value: 0.9
           inSlope: 0
           outSlope: 0
           tangentMode: 0
@@ -273,7 +273,7 @@ MonoBehaviour:
         m_RotationOrder: 0
   - Name: DefenceSkill
     Type: 4
-    Action: {fileID: 11400000, guid: a0b5662c231289c428b821496605bb28, type: 2}
+    Action: {fileID: 11400000, guid: 5994504577cd74b4fa69b984b9b5a532, type: 2}
     QualifierPrefab: {fileID: 0}
     SkillNo: 0
     Considerations:

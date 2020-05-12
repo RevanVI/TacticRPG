@@ -12,17 +12,408 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 334daa0f87be96a4897e37fcd5815bde, type: 3}
   m_Name: HealerDM
   m_EditorClassIdentifier: 
-  Name: ArcherDM
+  Name: HealerDM
   Qualifiers:
-  - Name: 
-    Id: 0
-    Action: {fileID: 0}
-    Considerations: []
-  - Name: 
-    Id: 0
-    Action: {fileID: 0}
-    Considerations: []
-  - Name: 
-    Id: 0
-    Action: {fileID: 0}
-    Considerations: []
+  - Name: HealSkill
+    Type: 4
+    Action: {fileID: 11400000, guid: 5994504577cd74b4fa69b984b9b5a532, type: 2}
+    QualifierPrefab: {fileID: 0}
+    SkillNo: 0
+    Considerations:
+    - Consideration: {fileID: 11400000, guid: f0a3885649204d34ab1bf3e8fb442a5a, type: 2}
+      ResolveCurve:
+        serializedVersion: 2
+        m_Curve:
+        - serializedVersion: 3
+          time: 0
+          value: 1
+          inSlope: 0
+          outSlope: 0
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0
+        - serializedVersion: 3
+          time: 0.5064616
+          value: 0.95
+          inSlope: -0.3046794
+          outSlope: -0.3046794
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0.35459507
+          outWeight: 0.33333334
+        - serializedVersion: 3
+          time: 1
+          value: 0
+          inSlope: 0
+          outSlope: 0
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 0
+  - Name: MeleeAttack
+    Type: 1
+    Action: {fileID: 11400000, guid: 80ba1062901814542977d6ec7c44614f, type: 2}
+    QualifierPrefab: {fileID: 0}
+    SkillNo: -1
+    Considerations:
+    - Consideration: {fileID: 11400000, guid: 061e9cee8493f134ab41caf2a89dd3d0, type: 2}
+      ResolveCurve:
+        serializedVersion: 2
+        m_Curve:
+        - serializedVersion: 3
+          time: 0
+          value: 0.5
+          inSlope: 0.81576014
+          outSlope: 0.81576014
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0.07083333
+        - serializedVersion: 3
+          time: 1
+          value: 1
+          inSlope: 0.00398609
+          outSlope: 0.00398609
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0.29583335
+          outWeight: 0
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 0
+    - Consideration: {fileID: 11400000, guid: 120c6fe57b2314b4fae345f97a22b148, type: 2}
+      ResolveCurve:
+        serializedVersion: 2
+        m_Curve:
+        - serializedVersion: 3
+          time: 0
+          value: 1
+          inSlope: -0.02959692
+          outSlope: -0.02959692
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0.32916668
+        - serializedVersion: 3
+          time: 1
+          value: 0.8
+          inSlope: -0.66042984
+          outSlope: -0.66042984
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0.116666675
+          outWeight: 0
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 0
+    - Consideration: {fileID: 11400000, guid: cdaa078812edfed44bda40d349e945ed, type: 2}
+      ResolveCurve:
+        serializedVersion: 2
+        m_Curve:
+        - serializedVersion: 3
+          time: 0
+          value: 1
+          inSlope: -0.050000012
+          outSlope: -0.050000012
+          tangentMode: 34
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0.33333334
+        - serializedVersion: 3
+          time: 1
+          value: 0.95
+          inSlope: -0.050000012
+          outSlope: -0.050000012
+          tangentMode: 34
+          weightedMode: 0
+          inWeight: 0.33333334
+          outWeight: 0
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 0
+  - Name: MoveToAttack
+    Type: 3
+    Action: {fileID: 11400000, guid: a0b5662c231289c428b821496605bb28, type: 2}
+    QualifierPrefab: {fileID: 0}
+    SkillNo: -1
+    Considerations:
+    - Consideration: {fileID: 11400000, guid: 52afedfbcad0ee64da718ec5808c1d18, type: 2}
+      ResolveCurve:
+        serializedVersion: 2
+        m_Curve:
+        - serializedVersion: 3
+          time: 0
+          value: 0.4
+          inSlope: 1.2
+          outSlope: 1.2
+          tangentMode: 34
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0.33333334
+        - serializedVersion: 3
+          time: 0.5
+          value: 1
+          inSlope: Infinity
+          outSlope: 0
+          tangentMode: 7
+          weightedMode: 0
+          inWeight: 0.33333334
+          outWeight: 0.33333334
+        - serializedVersion: 3
+          time: 1
+          value: 1
+          inSlope: 0
+          outSlope: 0
+          tangentMode: 34
+          weightedMode: 0
+          inWeight: 0.33333334
+          outWeight: 0
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 0
+    - Consideration: {fileID: 11400000, guid: e2e5bb70278ef5e44b648e5ad39883a3, type: 2}
+      ResolveCurve:
+        serializedVersion: 2
+        m_Curve:
+        - serializedVersion: 3
+          time: 0
+          value: 0
+          inSlope: 2
+          outSlope: 2
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0
+        - serializedVersion: 3
+          time: 1
+          value: 0.9
+          inSlope: 0
+          outSlope: 0
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 0
+    - Consideration: {fileID: 11400000, guid: 627df006c22765b4995f8ab423597e51, type: 2}
+      ResolveCurve:
+        serializedVersion: 2
+        m_Curve:
+        - serializedVersion: 3
+          time: 0
+          value: 1
+          inSlope: -0.19999999
+          outSlope: -0.19999999
+          tangentMode: 34
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0.33333334
+        - serializedVersion: 3
+          time: 1
+          value: 0.8
+          inSlope: -0.19999999
+          outSlope: -0.19999999
+          tangentMode: 34
+          weightedMode: 0
+          inWeight: 0.33333334
+          outWeight: 0
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 0
+    - Consideration: {fileID: 11400000, guid: bede35e684d5dcc48a123727376b9a7f, type: 2}
+      ResolveCurve:
+        serializedVersion: 2
+        m_Curve:
+        - serializedVersion: 3
+          time: 0
+          value: 0.5
+          inSlope: 0
+          outSlope: 0
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0
+        - serializedVersion: 3
+          time: 0.39361858
+          value: 0.8293543
+          inSlope: 0.7496662
+          outSlope: 0.7496662
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0.33333334
+          outWeight: 0.33333334
+        - serializedVersion: 3
+          time: 1
+          value: 1
+          inSlope: 0
+          outSlope: 0
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 0
+  - Name: MoveToSafe
+    Type: 3
+    Action: {fileID: 11400000, guid: a0b5662c231289c428b821496605bb28, type: 2}
+    QualifierPrefab: {fileID: 0}
+    SkillNo: -1
+    Considerations:
+    - Consideration: {fileID: 11400000, guid: 52afedfbcad0ee64da718ec5808c1d18, type: 2}
+      ResolveCurve:
+        serializedVersion: 2
+        m_Curve:
+        - serializedVersion: 3
+          time: 0
+          value: 1
+          inSlope: 0
+          outSlope: 0
+          tangentMode: 34
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0.33333334
+        - serializedVersion: 3
+          time: 0.5
+          value: 1
+          inSlope: -0
+          outSlope: -0.6
+          tangentMode: 5
+          weightedMode: 0
+          inWeight: 0.33333334
+          outWeight: 0.33333334
+        - serializedVersion: 3
+          time: 0.51
+          value: 0.4
+          inSlope: -1.3843732
+          outSlope: 0
+          tangentMode: 65
+          weightedMode: 0
+          inWeight: 0.33333334
+          outWeight: 0.33333334
+        - serializedVersion: 3
+          time: 1
+          value: 0.4
+          inSlope: -0
+          outSlope: -1.2
+          tangentMode: 5
+          weightedMode: 0
+          inWeight: 0.33333334
+          outWeight: 0
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 0
+    - Consideration: {fileID: 11400000, guid: e2e5bb70278ef5e44b648e5ad39883a3, type: 2}
+      ResolveCurve:
+        serializedVersion: 2
+        m_Curve:
+        - serializedVersion: 3
+          time: 0
+          value: 0
+          inSlope: 1.3584906
+          outSlope: 1.3584906
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0.15459557
+        - serializedVersion: 3
+          time: 0.4851368
+          value: 0.5451443
+          inSlope: 1.0521785
+          outSlope: 1.0521785
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0.33333334
+          outWeight: 0.33333334
+        - serializedVersion: 3
+          time: 1
+          value: 0.9
+          inSlope: 0
+          outSlope: 0
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 0
+    - Consideration: {fileID: 11400000, guid: 627df006c22765b4995f8ab423597e51, type: 2}
+      ResolveCurve:
+        serializedVersion: 2
+        m_Curve:
+        - serializedVersion: 3
+          time: 0
+          value: 1
+          inSlope: -0.19999999
+          outSlope: -0.19999999
+          tangentMode: 34
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0.33333334
+        - serializedVersion: 3
+          time: 1
+          value: 0.8
+          inSlope: -0.19999999
+          outSlope: -0.19999999
+          tangentMode: 34
+          weightedMode: 0
+          inWeight: 0.33333334
+          outWeight: 0
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 0
+    - Consideration: {fileID: 11400000, guid: 2e07f6f1b6487ca419af3ba9b65a6d36, type: 2}
+      ResolveCurve:
+        serializedVersion: 2
+        m_Curve:
+        - serializedVersion: 3
+          time: 0
+          value: 1
+          inSlope: 0.009593964
+          outSlope: 0.009593964
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0.33333334
+          outWeight: 0.15
+        - serializedVersion: 3
+          time: 1
+          value: 0.6
+          inSlope: -0.9689234
+          outSlope: -0.9689234
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0.070833325
+          outWeight: 0
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 0
+    - Consideration: {fileID: 11400000, guid: 265c96153827b2a4fa580f3098d91b18, type: 2}
+      ResolveCurve:
+        serializedVersion: 2
+        m_Curve:
+        - serializedVersion: 3
+          time: 0
+          value: 0.3
+          inSlope: 0.7
+          outSlope: 0.7
+          tangentMode: 34
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0.33333334
+        - serializedVersion: 3
+          time: 1
+          value: 1
+          inSlope: 0.7
+          outSlope: 0.7
+          tangentMode: 34
+          weightedMode: 0
+          inWeight: 0.33333334
+          outWeight: 0
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 0

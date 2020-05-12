@@ -204,7 +204,7 @@ public class GameController : MonoBehaviour
                     return otherChar.Properties.Speed >= character.Properties.Speed;
                 });
                 if (indexToInsert == -1)
-                    TurnQueue.Add(character);
+                    TurnQueue.Insert(0, character);
                 else
                     TurnQueue.Insert(indexToInsert, character);
             }
@@ -256,15 +256,26 @@ public class GameController : MonoBehaviour
         SkillPanelRef.SetSkills(_currentCharacter);
         if (_currentCharacter.IsStunned())
             EndTurn();
+
+        Node.TileGameStatus fraction = GridSystem.Instance.GetTileStatusFromCharacter(_currentCharacter);
+        List<Node.TileGameStatus> fractionList = new List<Node.TileGameStatus>();
+        if (fraction == Node.TileGameStatus.Ally)
+            fractionList.Add(Node.TileGameStatus.Enemy);
+        else
+            fractionList.Add(Node.TileGameStatus.Ally);
+        Movemap movemap = GridSystem.Instance.BuildMovemap(fraction, _currentCharacter.Properties.Speed, _currentCharacter.Coords);
+        GridSystem.Instance.DefineAvailableMeleeTargets(movemap, _currentCharacter, CharacterList, fractionList, 1);
+
         if ((_currentCharacter.Properties.Class == CharacterClass.Archer ||
             _currentCharacter.Properties.Class == CharacterClass.Mage) &&
             !IsThereEnemyNearby(_currentCharacter))
         {
             AvailableRangedTargets.Clear();
             AvailableRangedTargets.AddRange(DefineAvailableRangedTargets(_currentCharacter, _currentCharacter.GetOppositeFraction()));
-            GridSystem.Instance.GetCurrentMovemap().RangeCoords.AddRange(AvailableRangedTargets);
+           movemap.RangeCoords.AddRange(AvailableRangedTargets);
         }
-        GridSystem.Instance.PrintCharacterMoveMap(_currentCharacter, CharacterList, 1);
+        GridSystem.Instance.SetMovemap(movemap);
+        GridSystem.Instance.PrintMoveMap(movemap, fraction);
         GridSystem.Instance.UpdateInfluenceMap(CharacterList);
 
         if (_currentCharacter.gameObject.CompareTag("Enemy"))
