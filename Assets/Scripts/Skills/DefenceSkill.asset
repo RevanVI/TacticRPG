@@ -19,10 +19,12 @@ MonoBehaviour:
   Distance: 0
   Cooldown: 3
   CurrentCooldown: 0
-  Count: 0
-  CurrentCount: 0
+  Count: -1
+  CurrentCount: -1
+  User: {fileID: 0}
   TypeTarget: 3
   FractionTarget: 0
+  UseNearEnemy: 0
   OnExecute:
     m_PersistentCalls:
       m_Calls: []

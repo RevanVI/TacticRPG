@@ -31,7 +31,7 @@ public class DecisionMaker: ScriptableObject
         PossibleDecisions.Clear();
         for (int i = 0; i < Qualifiers.Count; ++i)
         {
-            if (Qualifiers[i].Id == UtilityAISystem.Qualifiers.MeleeAttack)
+            if (Qualifiers[i].Type == UtilityAISystem.Qualifiers.MeleeAttack)
             {
                 for (int j = 0; j < context.AvailableMeleeTargets.Count; ++j)
                 {
@@ -51,11 +51,14 @@ public class DecisionMaker: ScriptableObject
                     }
                 }
             }
-            else if (Qualifiers[i].Id == UtilityAISystem.Qualifiers.Move)
+            else if (Qualifiers[i].Type == UtilityAISystem.Qualifiers.Move)
             {
+                Character currentCharacter = context.Provider.GetControlledCharacter();
                 Movemap movemap = GridSystem.Instance.GetCurrentMovemap();
                 for (int j = 0; j < movemap.MoveCoords.Count; ++j)
                 {
+                    if (movemap.MoveCoords[j] == currentCharacter.Coords)
+                        continue;
                     Decision decision = new Decision();
                     decision.Context = context.Copy();
                     decision.Context.Target = movemap.MoveCoords[j];
@@ -63,7 +66,7 @@ public class DecisionMaker: ScriptableObject
                     PossibleDecisions.Add(decision);
                 }
             }
-            else if (Qualifiers[i].Id == UtilityAISystem.Qualifiers.RangedAttack)
+            else if (Qualifiers[i].Type == UtilityAISystem.Qualifiers.RangedAttack)
             {
                 for (int j = 0; j < context.AvailableRangedTargets.Count; ++j)
                 {
@@ -75,28 +78,111 @@ public class DecisionMaker: ScriptableObject
                     PossibleDecisions.Add(decision);
                 }
             }
-            else if (Qualifiers[i].Id == UtilityAISystem.Qualifiers.Skill)
+            else if (Qualifiers[i].Type == UtilityAISystem.Qualifiers.Skill)
             {
-                foreach (var skill in context.Provider.GetControlledCharacter().Skills)
+                Character user = context.Provider.GetControlledCharacter();
+                Skill skill = user.Skills[Qualifiers[i].SkillNo];
+                if (skill.CurrentCooldown > 0 || skill.CurrentCount == 0)
+                    continue;
+                if (skill.TypeTarget == Skill.TargetType.Self)
                 {
-                    /*
-                    if (skill.TypeTarget == Skill.TargetType.Self)
+                    Decision decision = new Decision();
+                    decision.Context = context.Copy();
+                    decision.Context.Data.Add("SkillNo", Qualifiers[i].SkillNo);
+                    decision.QualifierRef = Qualifiers[i];
+                    PossibleDecisions.Add(decision);
+                }
+                else if (skill.TypeUse == Skill.UseType.Melee)
+                {
+                    //define list of target fractions
+                    List<string> fractionList = new List<string>();
+                    if (skill.FractionTarget == Skill.TargetFraction.Enemy)
+                        fractionList.Add(user.GetOppositeFraction());
+                    else if (skill.FractionTarget == Skill.TargetFraction.Ally)
+                        fractionList.Add(user.tag);
+                    else
+                    {
+                        fractionList.Add(user.GetOppositeFraction());
+                        fractionList.Add(user.tag);
+                    }
+                    //define all data
+                    Movemap skillMovemap = new Movemap();
+                    skillMovemap.MoveCoords.AddRange(GridSystem.Instance.GetCurrentMovemap().MoveCoords);
+                    //define all target that character can reach 
+                    GridSystem.Instance.DefineAvailableMeleeTargets(skillMovemap, user, GameController.Instance.CharacterList, GridSystem.ConvertFractionsFromStringToNode(fractionList), skill.Distance);
+
+                    //define all positions to attack for all targets
+                    List<List<Vector3Int>> possiblePositions = new List<List<Vector3Int>>();
+                    for (int j = 0; j < skillMovemap.MeleeCoords.Count; ++j)
+                    {
+                        Character targetCharacter = GridSystem.Instance.GetCharacterFromCoords(skillMovemap.MeleeCoords[j]);
+                        //get possible positions to attack
+                        possiblePositions.Add(GridSystem.Instance.DefinePositionsToAttackTarget(skillMovemap, targetCharacter, skill.Distance));
+                        //additional special checks
+                        skill.AdditionalChecks(targetCharacter, possiblePositions[j]);
+                        //if there no possible positions to attack than delete this target from list
+                        if (possiblePositions[j].Count == 0)
+                        {
+                            skillMovemap.MeleeCoords.RemoveAt(j);
+                            possiblePositions.RemoveAt(j);
+                            --j;
+                        }
+                    }
+
+                    //create decision to all pairs target-possible position
+                    for (int j = 0; j < skillMovemap.MeleeCoords.Count; ++j)
+                    {
+                        foreach (var coords in possiblePositions[j])
+                        {
+                            Decision decision = new Decision();
+                            decision.Context = context.Copy();
+                            decision.Context.Target = GridSystem.Instance.GetCharacterFromCoords(skillMovemap.MeleeCoords[j]);
+                            decision.Context.Data.Add("AttackTile", coords);
+                            decision.Context.Data.Add("SkillNo", Qualifiers[i].SkillNo);
+                            decision.QualifierRef = Qualifiers[i];
+                            PossibleDecisions.Add(decision);
+                        }
+                    }
+                }
+                else if (skill.TypeUse == Skill.UseType.Randged)
+                {
+                    //define list of target fractions
+                    List<string> fractionList = new List<string>();
+                    if (skill.FractionTarget == Skill.TargetFraction.Enemy)
+                        fractionList.Add(user.GetOppositeFraction());
+                    else if (skill.FractionTarget == Skill.TargetFraction.Ally)
+                        fractionList.Add(user.tag);
+                    else
+                    {
+                        fractionList.Add(user.GetOppositeFraction());
+                        fractionList.Add(user.tag);
+                    }
+                                                   
+                    Movemap skillMovemap = new Movemap();
+                    bool isThereEnemyNearby = GameController.Instance.IsThereEnemyNearby(user);
+
+                    if ((isThereEnemyNearby && skill.UseNearEnemy) ||
+                        (!isThereEnemyNearby && user.Properties.Class != CharacterClass.Archer))
+                    {
+                        foreach (var fraction in fractionList)
+                            skillMovemap.RangeCoords.AddRange(GameController.Instance.DefineAvailableRangedTargets(user, fraction));
+                    }
+                    else if (!isThereEnemyNearby && user.Properties.Class == CharacterClass.Archer) //this can reduce amount of raycasts
+                    {
+                        skillMovemap.RangeCoords.AddRange(GridSystem.Instance.GetCurrentMovemap().RangeCoords);
+                        if (fractionList.Contains(user.tag))
+                            skillMovemap.RangeCoords.AddRange(GameController.Instance.DefineAvailableRangedTargets(user, user.tag));
+                    }
+
+                    foreach (var targetCoords in skillMovemap.RangeCoords)
                     {
                         Decision decision = new Decision();
                         decision.Context = context.Copy();
+                        decision.Context.Target = GridSystem.Instance.GetCharacterFromCoords(targetCoords);
+                        decision.Context.Data.Add("SkillNo", Qualifiers[i].SkillNo);
                         decision.QualifierRef = Qualifiers[i];
                         PossibleDecisions.Add(decision);
                     }
-                        StartCoroutine(SelfSkillProcess());
-                    else if (skill.TypeUse == Skill.UseType.Melee)
-                    {
-                        StartCoroutine(MeleeSkillProcess());
-                    }
-                    else if (skill.TypeUse == Skill.UseType.Randged)
-                    {
-                        StartCoroutine(RangeSkillProcess());
-                    }
-                    */
                 }
             }
         }
@@ -119,7 +205,6 @@ public class DecisionMaker: ScriptableObject
                 maxScore = score;
                 bestDecision = PossibleDecisions[i];
             }
-
         }
 
         bestDecision.QualifierRef.Action.Context = bestDecision.Context;

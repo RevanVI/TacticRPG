@@ -298,6 +298,7 @@ public class Character : MonoBehaviour
         if (!WaitForCallback)
         {
             _skillToUse = -1;
+            Skills[_skillToUse].Target = null;
             OnActionsEnded.Invoke();
         }
     }

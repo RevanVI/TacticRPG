@@ -19,8 +19,9 @@ MonoBehaviour:
   Distance: 2
   Cooldown: 2
   CurrentCooldown: 0
-  Count: 0
-  CurrentCount: 0
+  Count: -1
+  CurrentCount: -1
+  User: {fileID: 0}
   TypeTarget: 0
   FractionTarget: 1
   UseNearEnemy: 1

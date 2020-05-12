@@ -15,8 +15,10 @@ MonoBehaviour:
   Name: ArcherDM
   Qualifiers:
   - Name: RangeAttack
-    Id: 2
+    Type: 2
     Action: {fileID: 11400000, guid: 300cfe7bf53770942a278f8bb6793469, type: 2}
+    QualifierPrefab: {fileID: 0}
+    SkillNo: -1
     Considerations:
     - Consideration: {fileID: 11400000, guid: fa7ea8ac5104c6240a462cea6af5f79d, type: 2}
       ResolveCurve:
@@ -49,9 +51,9 @@ MonoBehaviour:
         m_Curve:
         - serializedVersion: 3
           time: 0
-          value: 0.8
-          inSlope: 0.19999999
-          outSlope: 0.19999999
+          value: 0.95
+          inSlope: 0.050000012
+          outSlope: 0.050000012
           tangentMode: 34
           weightedMode: 0
           inWeight: 0
@@ -59,8 +61,8 @@ MonoBehaviour:
         - serializedVersion: 3
           time: 1
           value: 1
-          inSlope: 0.19999999
-          outSlope: 0.19999999
+          inSlope: 0.050000012
+          outSlope: 0.050000012
           tangentMode: 34
           weightedMode: 0
           inWeight: 0.33333334
@@ -69,8 +71,10 @@ MonoBehaviour:
         m_PostInfinity: 2
         m_RotationOrder: 0
   - Name: MeleeAttack
-    Id: 1
+    Type: 1
     Action: {fileID: 11400000, guid: 80ba1062901814542977d6ec7c44614f, type: 2}
+    QualifierPrefab: {fileID: 0}
+    SkillNo: -1
     Considerations:
     - Consideration: {fileID: 11400000, guid: 52afedfbcad0ee64da718ec5808c1d18, type: 2}
       ResolveCurve:
@@ -234,8 +238,10 @@ MonoBehaviour:
         m_PostInfinity: 2
         m_RotationOrder: 0
   - Name: MoveToSave
-    Id: 3
+    Type: 3
     Action: {fileID: 11400000, guid: a0b5662c231289c428b821496605bb28, type: 2}
+    QualifierPrefab: {fileID: 0}
+    SkillNo: -1
     Considerations:
     - Consideration: {fileID: 11400000, guid: e2e5bb70278ef5e44b648e5ad39883a3, type: 2}
       ResolveCurve:
@@ -364,6 +370,62 @@ MonoBehaviour:
           value: 0.6
           inSlope: -0.39999998
           outSlope: -0.39999998
+          tangentMode: 34
+          weightedMode: 0
+          inWeight: 0.33333334
+          outWeight: 0
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 0
+  - Name: PunchSkill
+    Type: 4
+    Action: {fileID: 11400000, guid: 5994504577cd74b4fa69b984b9b5a532, type: 2}
+    QualifierPrefab: {fileID: 0}
+    SkillNo: 0
+    Considerations:
+    - Consideration: {fileID: 11400000, guid: cdaa078812edfed44bda40d349e945ed, type: 2}
+      ResolveCurve:
+        serializedVersion: 2
+        m_Curve:
+        - serializedVersion: 3
+          time: 0
+          value: 1
+          inSlope: -0.33903578
+          outSlope: -0.33903578
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0.07217695
+        - serializedVersion: 3
+          time: 1
+          value: 0.6
+          inSlope: 0
+          outSlope: 0
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 0
+    - Consideration: {fileID: 11400000, guid: d9dc4017aa0120f4095c346c631c5b61, type: 2}
+      ResolveCurve:
+        serializedVersion: 2
+        m_Curve:
+        - serializedVersion: 3
+          time: 0
+          value: 1
+          inSlope: -1
+          outSlope: -1
+          tangentMode: 34
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0.33333334
+        - serializedVersion: 3
+          time: 1
+          value: 0
+          inSlope: -1
+          outSlope: -1
           tangentMode: 34
           weightedMode: 0
           inWeight: 0.33333334

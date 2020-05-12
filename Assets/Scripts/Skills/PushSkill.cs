@@ -14,7 +14,8 @@ public class PushSkill : Skill
         for (int i = 0; i < possiblePositions.Count; ++i)
         {
             Vector3Int targetMoveCoords = target.Coords + (target.Coords - possiblePositions[i]);
-            if (GridSystem.Instance.GetNode(targetMoveCoords).GameStatus != Node.TileGameStatus.Empty)
+            Node targetMoveNode = GridSystem.Instance.GetNode(targetMoveCoords);
+            if (targetMoveNode == null || targetMoveNode.GameStatus != Node.TileGameStatus.Empty)
             {
                 possiblePositions.RemoveAt(i);
                 --i;

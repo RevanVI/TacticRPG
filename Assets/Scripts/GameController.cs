@@ -495,10 +495,11 @@ public class GameController : MonoBehaviour
             possiblePositions.Add(GridSystem.Instance.DefinePositionsToAttackTarget(skillMovemap, targetCharacter, _skillData.Distance));
             //additional special checks
             _skillData.AdditionalChecks(targetCharacter, possiblePositions[i]);
-            //if there no possible positions to attack than delete this target from list
+            //if there no possible positions to attack than delete this target from lists
             if (possiblePositions[i].Count == 0)
             {
                 skillMovemap.MeleeCoords.RemoveAt(i);
+                possiblePositions.RemoveAt(i);
                 --i;
             }
         }

@@ -15,8 +15,10 @@ MonoBehaviour:
   Name: WarriorDM
   Qualifiers:
   - Name: MeleeAttack
-    Id: 1
+    Type: 1
     Action: {fileID: 11400000, guid: 80ba1062901814542977d6ec7c44614f, type: 2}
+    QualifierPrefab: {fileID: 0}
+    SkillNo: -1
     Considerations:
     - Consideration: {fileID: 11400000, guid: 52afedfbcad0ee64da718ec5808c1d18, type: 2}
       ResolveCurve:
@@ -180,8 +182,10 @@ MonoBehaviour:
         m_PostInfinity: 2
         m_RotationOrder: 0
   - Name: Move
-    Id: 3
+    Type: 3
     Action: {fileID: 11400000, guid: a0b5662c231289c428b821496605bb28, type: 2}
+    QualifierPrefab: {fileID: 0}
+    SkillNo: -1
     Considerations:
     - Consideration: {fileID: 11400000, guid: e2e5bb70278ef5e44b648e5ad39883a3, type: 2}
       ResolveCurve:
@@ -263,6 +267,55 @@ MonoBehaviour:
           tangentMode: 0
           weightedMode: 0
           inWeight: 0
+          outWeight: 0
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 0
+  - Name: DefenceSkill
+    Type: 4
+    Action: {fileID: 11400000, guid: a0b5662c231289c428b821496605bb28, type: 2}
+    QualifierPrefab: {fileID: 0}
+    SkillNo: 0
+    Considerations:
+    - Consideration: {fileID: 11400000, guid: 52afedfbcad0ee64da718ec5808c1d18, type: 2}
+      ResolveCurve:
+        serializedVersion: 2
+        m_Curve:
+        - serializedVersion: 3
+          time: 0
+          value: 0.7
+          inSlope: 2
+          outSlope: 2
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0
+        - serializedVersion: 3
+          time: 0.6301635
+          value: 0.5995937
+          inSlope: -2.4253967
+          outSlope: -2.4253967
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0.33333334
+          outWeight: 0.2383742
+        - serializedVersion: 3
+          time: 0.7
+          value: 0.5
+          inSlope: 0.0039098477
+          outSlope: 0.0039098477
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0.33333334
+          outWeight: 0.20062087
+        - serializedVersion: 3
+          time: 1
+          value: 0.5
+          inSlope: -0.0038872922
+          outSlope: -0.0038872922
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0.20178495
           outWeight: 0
         m_PreInfinity: 2
         m_PostInfinity: 2
