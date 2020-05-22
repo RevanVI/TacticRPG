@@ -366,6 +366,11 @@ public class Character : MonoBehaviour
         WaitForCallback = false;
         OnActionsEnded.Invoke();
     }
+
+    public int GetSteps()
+    {
+        return Properties.Speed;
+    }
 }
 
 

@@ -22,30 +22,24 @@ public class Qualifier: ScriptableObject
     public virtual float Score(ContextBase context, float minValue)
     {
         float modificator = 1 - 1 / Considerations.Count;
-        float makeUpValue;
         float score = 1f;
-        float compensationScore = 1f;
         for (int i = 0; i < Considerations.Count; ++i)
         {
             float considerationScore = Considerations[i].Consideration.Score(context);
             float curveScore = Considerations[i].ResolveCurve.Evaluate(considerationScore);
             LogHandler.WriteText($"\t\tConsideration {Considerations[i].Consideration.Name}\n\t\t\tscore {considerationScore}\n\t\t\tCurve score {curveScore}\n");
+
+            //apply compensation factor
+            curveScore = curveScore + ((1 - curveScore) * modificator * curveScore);
             score *= curveScore;
 
-            //check if we already has worse result (assume that others considerations returns maximum - 1)
-            makeUpValue = (1 - score) * modificator;
-            compensationScore = score + makeUpValue * score;
-            if (compensationScore < minValue)
+            //check if we already has worse result (assume that others considerations returns maximum (1))
+            if (score < minValue)
             {
                 return 0f;
             }
         }
-
-        //compensation
-        makeUpValue = (1 - score) * modificator;
-        compensationScore = score + makeUpValue * score;
-        LogHandler.WriteText($"\t\tTotal score {score}\n\t\tCompensationScore {compensationScore}\n");
-        return compensationScore;
-
+        LogHandler.WriteText($"\t\tTotal score {score}\n");
+        return score;
     }
 }

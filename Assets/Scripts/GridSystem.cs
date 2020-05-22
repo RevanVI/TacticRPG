@@ -112,7 +112,7 @@ public class GridSystem : MonoBehaviour
         {
             if (character.Properties.CurrentHealth <= 0 ||
                 character == currentCharacter ||
-                !targetFractions.Contains(GetTileStatusFromCharacter(character)) )
+                !targetFractions.Contains(Node.GetTileStatusFromCharacter(character)) )
                 continue;
 
             Vector3Int offsetCoords = character.Coords;
@@ -170,7 +170,7 @@ public class GridSystem : MonoBehaviour
     public void PrintCharacterMoveMap(Character character, List<Character> characterList, int attackDistance)
     {
         Node.TileGameStatus fraction;
-        fraction = GetTileStatusFromCharacter(character);
+        fraction = Node.GetTileStatusFromCharacter(character);
         List<Node.TileGameStatus> fractionList = new List<Node.TileGameStatus>();
         if (fraction == Node.TileGameStatus.Ally)
             fractionList.Add(Node.TileGameStatus.Enemy);
@@ -230,13 +230,8 @@ public class GridSystem : MonoBehaviour
             BattleTile tile = PathfindingMap.GetTile<BattleTile>(pos);
             if (tile != null)
             {
-                Node centralTileNode;
-                string nodeKey = _graph.CreateNodeKeyFromCoordinates(pos.x, pos.y);
-                if (_graph.NodeGraph.ContainsKey(nodeKey))
-                {
-                    centralTileNode = _graph.NodeGraph[nodeKey];
-                }
-                else
+                Node centralTileNode = _graph.GetNode(pos);
+                if (centralTileNode == null)
                 {
                     centralTileNode = new Node();
                     centralTileNode.Coords = pos;
@@ -246,7 +241,7 @@ public class GridSystem : MonoBehaviour
                     else
                         centralTileNode.GameStatus = Node.TileGameStatus.Empty;
                     centralTileNode.Influences = new List<KeyValuePair<int, Node.InfluenceStatus>>();
-                    _graph.NodeGraph.Add(nodeKey, centralTileNode);
+                    _graph.AddNode(centralTileNode);
                 }
 
                 //adding connections
@@ -258,13 +253,8 @@ public class GridSystem : MonoBehaviour
                         BattleTile offsetTile = PathfindingMap.GetTile<BattleTile>(currentTileLocation);
                         if (offsetTile != null)
                         {
-                            Node offsetTileNode;
-                            string offsetNodeKey = _graph.CreateNodeKeyFromCoordinates(currentTileLocation.x, currentTileLocation.y);
-                            if (_graph.NodeGraph.ContainsKey(offsetNodeKey))
-                            {
-                                offsetTileNode = _graph.NodeGraph[offsetNodeKey];
-                            }
-                            else
+                            Node offsetTileNode = _graph.GetNode(currentTileLocation);
+                            if (offsetTileNode == null)
                             {
                                 offsetTileNode = new Node();
                                 offsetTileNode.Coords = currentTileLocation;
@@ -274,9 +264,8 @@ public class GridSystem : MonoBehaviour
                                 else
                                     offsetTileNode.GameStatus = Node.TileGameStatus.Empty;
                                 offsetTileNode.Influences = new List<KeyValuePair<int, Node.InfluenceStatus>>();
-                                _graph.NodeGraph.Add(offsetNodeKey, offsetTileNode);
+                                _graph.AddNode(offsetTileNode);
                             }
-
                             if (offsetTileNode.GameStatus == Node.TileGameStatus.Empty)
                             {
                                 centralTileNode.AddConnection(offsetTileNode);
@@ -355,91 +344,13 @@ public class GridSystem : MonoBehaviour
     public void DefineEffect(EffectTile effect)
     {
         Vector3Int coords = GetTilemapCoordsFromWorld(PathfindingMap, effect.gameObject.transform.position);
-        AddEffectToNode(coords, effect);
+        _graph.GetNode(coords).AddEffect(effect);
     }
 
     public void RemoveEffect(EffectTile effect)
     {
         Vector3Int coords = GetTilemapCoordsFromWorld(PathfindingMap, effect.transform.position);
-        RemoveEffectFromNode(coords, effect);
-    }
-
-    //Now one effect rewrite another
-    public bool AddEffectToNode(Vector3Int coords, EffectTile effect)
-    {
-        Node node = _graph.GetNode(coords);
-        //if tile already has effect when find it and rewrite
-        if (node.HasEffect)
-        {
-            foreach (var gameobject in node.ObjectsOnTile)
-            {
-                EffectTile oldEffect;
-                bool ok = gameobject.TryGetComponent<EffectTile>(out oldEffect);
-                if (ok)
-                {
-                    node.ObjectsOnTile.Remove(oldEffect.gameObject);
-                    oldEffect.EndEffect();
-                }
-            }
-        }
-
-        node.ObjectsOnTile.Add(effect.gameObject);
-        node.HasEffect = true;
-        effect.StartEffect();
-        return true;
-    }
-
-    public bool RemoveEffectFromNode(Vector3Int coords, EffectTile effect)
-    {
-        Node node = _graph.GetNode(coords);
-        if (node.HasEffect)
-        {
-            foreach (var gameobject in node.ObjectsOnTile)
-            {
-                EffectTile oldEffect;
-                bool ok = gameobject.TryGetComponent<EffectTile>(out oldEffect);
-                if (ok && oldEffect == effect)
-                {
-                    node.ObjectsOnTile.Remove(oldEffect.gameObject);
-                    oldEffect.EndEffect();
-                }
-            }
-            node.HasEffect = false;
-            return true;
-        }
-        return false;
-    }
-
-    //Now only one character can be on tile
-    public bool AddCharacterToNode(Vector3Int coords, Character character)
-    {
-        Node node = _graph.GetNode(coords);
-        if (node.GameStatus == Node.TileGameStatus.Empty)
-        {
-            node.GameStatus = GetTileStatusFromCharacter(character);
-            node.ObjectsOnTile.Add(character.gameObject);
-        }
-        return false;
-    }
-
-    public bool RemoveCharacterFromNode(Vector3Int coords, Character character)
-    {
-        Node node = _graph.GetNode(coords);
-        if (node.GameStatus == Node.TileGameStatus.Ally || node.GameStatus == Node.TileGameStatus.Enemy)
-        {
-            foreach(var gameobject in node.ObjectsOnTile)
-            {
-                Character oldCharacter;
-                bool ok = gameobject.TryGetComponent<Character>(out oldCharacter);
-                if (ok && oldCharacter == character)
-                {
-                    node.ObjectsOnTile.Remove(character.gameObject);
-                    node.GameStatus = Node.TileGameStatus.Empty;
-                    return true;
-                }
-            }
-        }
-        return false;
+        _graph.GetNode(coords).RemoveEffect(effect);
     }
 
     public void SetTileGameplayStatus(Vector3Int coords, Node.TileGameStatus status)
@@ -454,10 +365,10 @@ public class GridSystem : MonoBehaviour
 
     public float Heuristic(Node start, Node end)
     {
-        float x = (start.Coords.x - end.Coords.x) * _basicCost;
-        float y = (start.Coords.y - end.Coords.y) * _basicCost;
+        float x = Mathf.Abs(start.Coords.x - end.Coords.x);
+        float y = Mathf.Abs(start.Coords.y - end.Coords.y);
 
-        return Mathf.Sqrt(x * x + y * y);
+        return (x + y) * _basicCost;
     }
 
     public Path AStarPathfinding(Node start, Node end, Character character)
@@ -465,31 +376,31 @@ public class GridSystem : MonoBehaviour
         start.CostSoFar = 0;
         start.EstimatedCost = Heuristic(start, end);
 
-        int steps = character.Properties.Speed;
+        int steps = character.GetSteps();
 
-        List<KeyValuePair<Node, int>> openList = new List<KeyValuePair<Node, int>>();
-        openList.Add(new KeyValuePair<Node, int>(start, steps));
+        List<Node> openList = new List<Node>();
+        openList.Add(start);
+        openList[0].ProcessValue = steps;
 
-        //Node currentNode = null;
-        KeyValuePair<Node, int> currentPair;
+       Node currentNode = null;
         while (openList.Count != 0)
         {
-            currentPair = openList[0];
+            currentNode = openList[0];
 
             //find node with smallest estimated cost in open list
-            foreach (var nodePair in openList)
+            foreach (var node in openList)
             {
-                if (nodePair.Key.EstimatedCost < currentPair.Key.EstimatedCost)
-                    currentPair = nodePair;
+                if (node.EstimatedCost < currentNode.EstimatedCost)
+                    currentNode = node;
             }
 
             //if found node is goal node then stop searching and start build path
-            if (currentPair.Key == end)
+            if (currentNode == end)
                 break;
             //if there is not the last possible step then analyse near tiles
-            if (currentPair.Value > 0)
+            if (currentNode.ProcessValue > 0)
             { 
-                foreach (var connection in currentPair.Key.Connections)
+                foreach (var connection in currentNode.Connections)
                 {
                     Node endNode = connection.EndNode;
 
@@ -501,60 +412,13 @@ public class GridSystem : MonoBehaviour
 
                     //calculate the cost of movement
                     //this cost depend on tile and character properties
-                    float cost = currentPair.Key.CostSoFar + _basicCost;
-                    if (endNode.HasEffect)
-                    {
-                        EffectTile effect = endNode.GetEffect();
-                        if (effect.Type == EffectTileType.Damage)
-                        {
-                            /*
-                             * maxHealth - damage
-                             * > 80% = +30
-                             * 50-80% = +50
-                             * 0-50% = +100
-                             */
-                            float hpPercent = (character.Properties.CurrentHealth - effect.Value) / character.Properties.Health;
-                            if (hpPercent > 0.8f)
-                                cost += 30;
-                            else if (hpPercent < 0.5f)
-                                cost += 50;
-                            else
-                                cost += 100;
-                        }
-                        else if (effect.Type == EffectTileType.Heal)
-                        {
-                            /*
-                             * cost reduce based on current character's health
-                             * 100% = 0
-                             * >80% = -2
-                             * 50-80% = -4
-                             * <50% = -6
-                             */
-                            if (character.Properties.CurrentHealth != character.Properties.Health)
-                            {
-                                float hpPercent = character.Properties.CurrentHealth / character.Properties.Health;
-                                if (hpPercent > 0.8f)
-                                    cost -= 2;
-                                else if (hpPercent < 0.5f)
-                                    cost -= 6;
-                                else
-                                    cost -= 4;
-                            }
-                        }
-                    }
-
+                    float cost = CalculateCost(currentNode, endNode, character);
                     float heuristic;
-                    if (endNode.ProcessStatus == Node.NodeProcessStatus.InClosedList)
+                    if ((endNode.ProcessStatus == Node.NodeProcessStatus.InClosedList ||
+                         endNode.ProcessStatus == Node.NodeProcessStatus.InOpenList) &&
+                        endNode.CostSoFar < cost)
                     {
-                        if (endNode.CostSoFar < cost)
-                            continue;
-                        heuristic = endNode.EstimatedCost - endNode.CostSoFar;
-                    }
-                    else if (endNode.ProcessStatus == Node.NodeProcessStatus.InOpenList)
-                    {
-                        if (endNode.CostSoFar < cost)
-                            continue;
-                        heuristic = endNode.EstimatedCost - endNode.CostSoFar;
+                        continue;
                     }
                     else
                         heuristic = Heuristic(endNode, end);
@@ -565,22 +429,20 @@ public class GridSystem : MonoBehaviour
                     if (endNode.ProcessStatus != Node.NodeProcessStatus.InOpenList)
                     {
                         endNode.ProcessStatus = Node.NodeProcessStatus.InOpenList;
-                        openList.Add(new KeyValuePair<Node, int>(endNode, currentPair.Value - 1));
+                        endNode.ProcessValue = currentNode.ProcessValue - 1;
+                        openList.Add(endNode);
                     }
                 }
             }
-
-            openList.Remove(currentPair);
-            currentPair.Key.ProcessStatus = Node.NodeProcessStatus.InClosedList;
+            openList.Remove(currentNode);
+            currentNode.ProcessStatus = Node.NodeProcessStatus.InClosedList;
         }
 
         //if goal node wasn't found
-        if (currentPair.Key != end)
+        if (currentNode != end)
             return null;
         //else build path
         Path path = new Path();
-        Node currentNode = currentPair.Key;
-
         while (currentNode != start)
         {
             path.NodePath.Add(currentNode);
@@ -591,6 +453,52 @@ public class GridSystem : MonoBehaviour
         }
         path.NodePath.Reverse();
         return path;
+    }
+
+    public float CalculateCost(Node currentNode, Node targetNode, Character character)
+    {
+        float cost = currentNode.CostSoFar + _basicCost;
+        if (targetNode.HasEffect)
+        {
+            EffectTile effect = targetNode.GetEffect();
+            if (effect.Type == EffectTileType.Damage)
+            {
+                /*
+                 * maxHealth - damage
+                 * > 80% = +30
+                 * 50-80% = +50
+                 * 0-50% = +100
+                 */
+                float hpPercent = (character.Properties.CurrentHealth - effect.Value) / character.Properties.Health;
+                if (hpPercent > 0.8f)
+                    cost += 30;
+                else if (hpPercent < 0.5f)
+                    cost += 50;
+                else
+                    cost += 100;
+            }
+            else if (effect.Type == EffectTileType.Heal)
+            {
+                /*
+                 * cost reduce based on current character's health
+                 * 100% = 0
+                 * >80% = -2
+                 * 50-80% = -4
+                 * <50% = -6
+                 */
+                if (character.Properties.CurrentHealth != character.Properties.Health)
+                {
+                    float hpPercent = character.Properties.CurrentHealth / character.Properties.Health;
+                    if (hpPercent > 0.8f)
+                        cost -= 2;
+                    else if (hpPercent < 0.5f)
+                        cost -= 6;
+                    else
+                        cost -= 4;
+                }
+            }
+        }
+        return cost;
     }
 
     public Path BuildPath(Vector3Int start, Vector3Int end, Character character)
@@ -610,16 +518,6 @@ public class GridSystem : MonoBehaviour
         {
             Movemap.SetTile(path[i].Coords, PathTile);
         }
-    }
-
-    public Node.TileGameStatus GetTileStatusFromCharacter(Character character)
-    {
-        if (character.gameObject.CompareTag("Ally"))
-            return Node.TileGameStatus.Ally;
-        else if (character.gameObject.CompareTag("Enemy"))
-            return Node.TileGameStatus.Enemy;
-        else
-            return Node.TileGameStatus.Empty;
     }
 
     public static List<Node.TileGameStatus> ConvertFractionsFromStringToNode(List<string> fractionsStringList)
@@ -643,10 +541,19 @@ public class GridSystem : MonoBehaviour
         return null;
     }
 
+    public bool AddCharacterToNode(Vector3Int coords, Character character)
+    {
+        return _graph.GetNode(coords).AddCharacter(character);
+    }
+
+    public bool RemoveCharacterFromNode(Vector3Int coords, Character character)
+    {
+        return _graph.GetNode(coords).RemoveCharacter(character);
+    }
 
     /*
      * Influnce map section
-     */ 
+     */
 
     //build influence map going through all characters
     //can take much time
@@ -683,7 +590,7 @@ public class GridSystem : MonoBehaviour
         nodesToProcess.Add(currentNode);
         moveInfluence.Add(currentNode.Coords);
 
-        Node.TileGameStatus fraction = GetTileStatusFromCharacter(character);
+        Node.TileGameStatus fraction = Node.GetTileStatusFromCharacter(character);
         Node.TileGameStatus oppositeFraction;
         if (fraction == Node.TileGameStatus.Ally)
             oppositeFraction = Node.TileGameStatus.Enemy;

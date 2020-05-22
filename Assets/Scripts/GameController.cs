@@ -257,7 +257,7 @@ public class GameController : MonoBehaviour
         if (_currentCharacter.IsStunned())
             EndTurn();
 
-        Node.TileGameStatus fraction = GridSystem.Instance.GetTileStatusFromCharacter(_currentCharacter);
+        Node.TileGameStatus fraction = Node.GetTileStatusFromCharacter(_currentCharacter);
         List<Node.TileGameStatus> fractionList = new List<Node.TileGameStatus>();
         if (fraction == Node.TileGameStatus.Ally)
             fractionList.Add(Node.TileGameStatus.Enemy);
@@ -515,7 +515,7 @@ public class GameController : MonoBehaviour
             }
         }
 
-        GridSystem.Instance.PrintMoveMap(skillMovemap, GridSystem.Instance.GetTileStatusFromCharacter(_currentCharacter));
+        GridSystem.Instance.PrintMoveMap(skillMovemap, Node.GetTileStatusFromCharacter(_currentCharacter));
 
         List<Vector3Int> choosedPosition = new List<Vector3Int>();
         bool isNeedToRepaintMovemap = false;
@@ -601,7 +601,7 @@ public class GameController : MonoBehaviour
                     //return old movemap
                     GridSystem.Instance.ResetMovemap();
                     GridSystem.Instance.SetMovemap(oldMovemap);
-                    GridSystem.Instance.PrintMoveMap(oldMovemap, GridSystem.Instance.GetTileStatusFromCharacter(_currentCharacter));
+                    GridSystem.Instance.PrintMoveMap(oldMovemap, Node.GetTileStatusFromCharacter(_currentCharacter));
                     SkillPanelRef.SkillDenied(_skillNo);
                     end = true;
 
@@ -652,7 +652,7 @@ public class GameController : MonoBehaviour
                     //return old movemap
                     GridSystem.Instance.ResetMovemap();
                     GridSystem.Instance.SetMovemap(oldMovemap);
-                    GridSystem.Instance.PrintMoveMap(oldMovemap, GridSystem.Instance.GetTileStatusFromCharacter(_currentCharacter));
+                    GridSystem.Instance.PrintMoveMap(oldMovemap, Node.GetTileStatusFromCharacter(_currentCharacter));
                     SkillPanelRef.SkillDenied(_skillNo);
                     end = true;
 
@@ -702,7 +702,7 @@ public class GameController : MonoBehaviour
                 skillMovemap.RangeCoords.AddRange(DefineAvailableRangedTargets(_currentCharacter, _currentCharacter.tag));
         }
 
-        GridSystem.Instance.PrintMoveMap(skillMovemap, GridSystem.Instance.GetTileStatusFromCharacter(_currentCharacter));
+        GridSystem.Instance.PrintMoveMap(skillMovemap, Node.GetTileStatusFromCharacter(_currentCharacter));
         while (!end)
         {
             //define where player points
@@ -747,7 +747,7 @@ public class GameController : MonoBehaviour
                     //return old movemap
                     GridSystem.Instance.ResetMovemap();
                     GridSystem.Instance.SetMovemap(oldMovemap);
-                    GridSystem.Instance.PrintMoveMap(oldMovemap, GridSystem.Instance.GetTileStatusFromCharacter(_currentCharacter));
+                    GridSystem.Instance.PrintMoveMap(oldMovemap, Node.GetTileStatusFromCharacter(_currentCharacter));
                     SkillPanelRef.SkillDenied(_skillNo);
                     end = true;
 

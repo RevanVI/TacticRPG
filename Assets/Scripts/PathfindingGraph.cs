@@ -95,6 +95,35 @@ public class Node
         return null;
     }
 
+    public bool AddCharacter(Character character)
+    {
+        if (GameStatus == Node.TileGameStatus.Empty)
+        {
+            GameStatus = GetTileStatusFromCharacter(character);
+            ObjectsOnTile.Add(character.gameObject);
+        }
+        return false;
+    }
+
+    public bool RemoveCharacter(Character character)
+    {
+        if (GameStatus == Node.TileGameStatus.Ally || GameStatus == Node.TileGameStatus.Enemy)
+        {
+            foreach (var gameobject in ObjectsOnTile)
+            {
+                Character oldCharacter;
+                bool ok = gameobject.TryGetComponent<Character>(out oldCharacter);
+                if (ok && oldCharacter == character)
+                {
+                    ObjectsOnTile.Remove(character.gameObject);
+                    GameStatus = Node.TileGameStatus.Empty;
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     public EffectTile GetEffect()
     {
         if (HasEffect)
@@ -108,6 +137,60 @@ public class Node
             }
         }
         return null;
+    }
+
+    public bool AddEffect(EffectTile effect)
+    {
+        //if tile already has effect when find it and rewrite
+        if (HasEffect)
+        {
+            foreach (var gameobject in ObjectsOnTile)
+            {
+                EffectTile oldEffect;
+                bool ok = gameobject.TryGetComponent<EffectTile>(out oldEffect);
+                if (ok)
+                {
+                    ObjectsOnTile.Remove(oldEffect.gameObject);
+                    oldEffect.EndEffect();
+                }
+            }
+        }
+
+        ObjectsOnTile.Add(effect.gameObject);
+        HasEffect = true;
+        effect.StartEffect();
+        return true;
+    }
+
+    public bool RemoveEffect(EffectTile effect)
+    {
+        if (HasEffect)
+        {
+            foreach (var gameobject in ObjectsOnTile)
+            {
+                EffectTile oldEffect;
+                bool ok = gameobject.TryGetComponent<EffectTile>(out oldEffect);
+                if (ok && oldEffect == effect)
+                {
+                    ObjectsOnTile.Remove(oldEffect.gameObject);
+                    oldEffect.EndEffect();
+                    break;
+                }
+            }
+            HasEffect = false;
+            return true;
+        }
+        return false;
+    }
+
+    static public TileGameStatus GetTileStatusFromCharacter(Character character)
+    {
+        if (character.gameObject.CompareTag("Ally"))
+            return TileGameStatus.Ally;
+        else if (character.gameObject.CompareTag("Enemy"))
+            return TileGameStatus.Enemy;
+        else
+            return TileGameStatus.Empty;
     }
 }
 
@@ -135,11 +218,11 @@ public class Connection
 public class PathfindingGraph
 {
     //key - coordinates in form (x,y)
-    public Dictionary<string, Node> NodeGraph;
+    private Dictionary<string, Node> _nodeGraph;
 
     public PathfindingGraph()
     {
-        NodeGraph = new Dictionary<string, Node>();
+        _nodeGraph = new Dictionary<string, Node>();
     }
 
     public void GetNodeCoordinates(string nodeKey, out int x, out int y)
@@ -158,14 +241,21 @@ public class PathfindingGraph
     public Node GetNode(Vector3Int coords)
     {
         string key = CreateNodeKeyFromCoordinates(coords.x, coords.y);
-        if (NodeGraph.ContainsKey(key))
-            return NodeGraph[key];
+        if (_nodeGraph.ContainsKey(key))
+            return _nodeGraph[key];
+        return null;
+    }
+
+    public Node GetNode(string coords)
+    {
+        if (_nodeGraph.ContainsKey(coords))
+            return _nodeGraph[coords];
         return null;
     }
 
     public void RestoreProcessStatus()
     {
-        foreach (var node in NodeGraph.Values)
+        foreach (var node in _nodeGraph.Values)
         {
             node.ProcessStatus = Node.NodeProcessStatus.NotVisited;
             node.ProcessValue = 0;
@@ -174,9 +264,29 @@ public class PathfindingGraph
 
     public void ClearInfluenceData()
     {
-        foreach (var node in NodeGraph.Values)
+        foreach (var node in _nodeGraph.Values)
         {
             node.Influences.Clear();
         }
+    }
+
+    public bool AddNode(Node node)
+    {
+        string key = CreateNodeKeyFromCoordinates(node.Coords.x, node.Coords.y);
+        if (_nodeGraph.ContainsKey(key))
+            return false;
+        _nodeGraph.Add(key, node);
+        return true;
+    }
+
+    public bool Contains(string coords)
+    {
+        return _nodeGraph.ContainsKey(coords);
+    }
+
+    public bool Contains(Node node)
+    {
+        string key = CreateNodeKeyFromCoordinates(node.Coords.x, node.Coords.y);
+        return _nodeGraph.ContainsKey(key);
     }
 }

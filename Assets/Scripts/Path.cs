@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Path
 {
-    public List<Node> NodePath ;
+    public List<Node> NodePath;
     public bool IsEffectOnPath;
 
     public Path()

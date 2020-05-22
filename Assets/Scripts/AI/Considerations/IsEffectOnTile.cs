@@ -8,7 +8,7 @@ public class IsEffectOnTile : ConsiderationBase
     public override float Score(ContextBase context)
     {
         Path path = GridSystem.Instance.BuildPath(context.Provider.GetControlledCharacter().Coords, (Vector3Int)context.Target, context.Provider.GetControlledCharacter());
-        if (!path.IsEffectOnPath)
+        if (path != null && !path.IsEffectOnPath)
             return 0f;
         return 1f;
     }

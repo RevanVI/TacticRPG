@@ -33,7 +33,7 @@ public class EffectTile : MonoBehaviour
     public void EndEffect()
     {
         Debug.Log("Effect destroyed");
-        Destroy(this);
+        Destroy(gameObject);
     }
 
     void EndTurn()
