@@ -13,8 +13,7 @@ MonoBehaviour:
   m_Name: HealSkill
   m_EditorClassIdentifier: 
   Name: Heal
-  SkillImage: {fileID: -4045741745079397469, guid: 92774b571ea790946a0e94204dc43ee3,
-    type: 3}
+  SkillImage: {fileID: 21300000, guid: 5418ec5fd6c789c4893031a0dc1ceeeb, type: 3}
   TypeUse: 1
   Distance: 2
   Cooldown: 2

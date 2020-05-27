@@ -13,8 +13,7 @@ MonoBehaviour:
   m_Name: PushSkill
   m_EditorClassIdentifier: 
   Name: PushSkill
-  SkillImage: {fileID: -4062155650071244391, guid: c04b759b6c9d3544f82f8e39085240af,
-    type: 3}
+  SkillImage: {fileID: 21300000, guid: f3d94a1730f8956499148946fadfbaac, type: 3}
   TypeUse: 0
   Distance: 1
   Cooldown: 3

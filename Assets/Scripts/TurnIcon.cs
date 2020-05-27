@@ -35,6 +35,7 @@ public class TurnIcon : MonoBehaviour
     {
         ChainedCharacterBattleId = characterBattleId;
         CharacterImage.sprite = properties.Icon;
+        CharacterImage.color = properties.IconColor;
         HPText.text = $"HP: {properties.CurrentHealth} / {properties.Health}";
     } 
 

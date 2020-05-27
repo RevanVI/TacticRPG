@@ -9,10 +9,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cfc91276431a5fa4bad3a2385981d6f1, type: 3}
-  m_Name: BT_terrain_232
+  m_Script: {fileID: 13312, guid: 0000000000000000e000000000000000, type: 0}
+  m_Name: airtight-hatch
   m_EditorClassIdentifier: 
-  m_Sprite: {fileID: 21300000, guid: 886af27a59f31364dabbfdb1a4e99141, type: 3}
+  m_Sprite: {fileID: 21300000, guid: cba7dd6e68d6f6e40b723b9b24d680fa, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Transform:
     e00: 1
@@ -34,4 +34,3 @@ MonoBehaviour:
   m_InstancedGameObject: {fileID: 0}
   m_Flags: 1
   m_ColliderType: 1
-  IsBlocked: 0

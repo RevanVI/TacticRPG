@@ -10,6 +10,9 @@ public class CharacterPanel : MonoBehaviour
     public Text LevelText;
     public Text HPText;
     public Text SpeedText;
+    public Text MeleeDmgText;
+    public Text RangeDmgText;
+    public Text AmmoText;
 
     public Button ExitButton;
 
@@ -25,6 +28,9 @@ public class CharacterPanel : MonoBehaviour
         LevelText.text = $"Lvl. {characterProperties.Level}";
         HPText.text = $"{characterProperties.CurrentHealth} / {characterProperties.Health}";
         SpeedText.text = characterProperties.Speed.ToString();
+        MeleeDmgText.text = characterProperties.MeleeDamage.ToString();
+        RangeDmgText.text = characterProperties.RangedDamage.ToString();
+        AmmoText.text = characterProperties.CurrentMissiles.ToString();
 
         gameObject.SetActive(true);
     }

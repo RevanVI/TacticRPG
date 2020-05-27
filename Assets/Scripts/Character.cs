@@ -22,6 +22,7 @@ public struct CharacterProperties
     public CharacterClass Class;
     public int Level;
     public Sprite Icon;
+    public Color IconColor;
     public int Health;
     public int CurrentHealth;
     public int Speed;
@@ -53,6 +54,7 @@ public class Character : MonoBehaviour
 
     public List<Vector3Int> TargetPath;
 
+    private SpriteRenderer _spriteRenderer;
     private Rigidbody2D _rb2d;
     private BoxCollider2D _collider;
     private bool _isMoving;
@@ -74,7 +76,9 @@ public class Character : MonoBehaviour
         _isMoving = false;
         _rb2d = GetComponent<Rigidbody2D>();
         _collider = GetComponent<BoxCollider2D>();
+        _spriteRenderer = GetComponent<SpriteRenderer>();
 
+        _spriteRenderer.color = Properties.IconColor;
         OnDamageTaken = new UnityIntEvent();
         OnDie = new UnityIntEvent();
         //register in gameController

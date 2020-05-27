@@ -13,8 +13,7 @@ MonoBehaviour:
   m_Name: DefenceSkill
   m_EditorClassIdentifier: 
   Name: Defence
-  SkillImage: {fileID: -7034185583429119738, guid: c04b759b6c9d3544f82f8e39085240af,
-    type: 3}
+  SkillImage: {fileID: 21300000, guid: a8f13403145a5b841918e48684a35e77, type: 3}
   TypeUse: 0
   Distance: 0
   Cooldown: 3

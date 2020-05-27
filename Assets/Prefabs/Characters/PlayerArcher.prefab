@@ -29,7 +29,7 @@ Transform:
   m_GameObject: {fileID: 575857880030165806}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0.43524724, y: -2.5897293, z: 0}
-  m_LocalScale: {x: 1.5996217, y: 1.928, z: 1}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
@@ -50,7 +50,8 @@ MonoBehaviour:
     Name: PlayerArcher
     Class: 1
     Level: 5
-    Icon: {fileID: -1488781726478902163, guid: 92774b571ea790946a0e94204dc43ee3, type: 3}
+    Icon: {fileID: 21300000, guid: d753efc53efa8674d99e32b3d11a1b95, type: 3}
+    IconColor: {r: 1, g: 1, b: 1, a: 1}
     Health: 10
     CurrentHealth: 10
     Speed: 4
@@ -106,8 +107,7 @@ SpriteRenderer:
   m_SortingLayerID: 677084055
   m_SortingLayer: 1
   m_SortingOrder: 3
-  m_Sprite: {fileID: -1488781726478902163, guid: 92774b571ea790946a0e94204dc43ee3,
-    type: 3}
+  m_Sprite: {fileID: 21300000, guid: d753efc53efa8674d99e32b3d11a1b95, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -155,7 +155,7 @@ BoxCollider2D:
   m_Offset: {x: 0.028315872, y: 0.07632276}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
-    pivot: {x: 0.5, y: 0}
+    pivot: {x: 0.5, y: 0.5}
     oldSize: {x: 1, y: 1}
     newSize: {x: 1, y: 1}
     adaptiveTilingThreshold: 0.5

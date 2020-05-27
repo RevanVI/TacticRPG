@@ -12,8 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cfc91276431a5fa4bad3a2385981d6f1, type: 3}
   m_Name: BT_blockTile
   m_EditorClassIdentifier: 
-  m_Sprite: {fileID: -7034185583429119738, guid: c04b759b6c9d3544f82f8e39085240af,
-    type: 3}
+  m_Sprite: {fileID: 21300000, guid: 8b3d4520fe5bae24b98b6c9fd7116af8, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Transform:
     e00: 1
