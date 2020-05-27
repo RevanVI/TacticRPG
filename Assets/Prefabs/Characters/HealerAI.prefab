@@ -151,9 +151,9 @@ MonoBehaviour:
     IconColor: {r: 1, g: 0.68235296, b: 0.68235296, a: 1}
     Health: 10
     CurrentHealth: 10
-    Speed: 2
+    Speed: 3
     RangedDamage: 0
-    MeleeDamage: 2
+    MeleeDamage: 3
     MaxMissiles: 0
     CurrentMissiles: 0
   BattleId: 0

@@ -27,5 +27,5 @@ MonoBehaviour:
   OnExecute:
     m_PersistentCalls:
       m_Calls: []
-  Value: 2
+  Value: 1
   Time: 0

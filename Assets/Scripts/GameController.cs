@@ -199,12 +199,17 @@ public class GameController : MonoBehaviour
         {
             if (character.Properties.Health > 0)
             {
-                int indexToInsert = TurnQueue.FindLastIndex(delegate (Character otherChar)
+                int indexToInsert = -1;
+                for (int i = 0; i < TurnQueue.Count; ++i)
                 {
-                    return otherChar.Properties.Speed >= character.Properties.Speed;
-                });
+                    if (TurnQueue[i].Properties.Speed < character.Properties.Speed)
+                    {
+                        indexToInsert = i;
+                        break;
+                    }
+                }
                 if (indexToInsert == -1)
-                    TurnQueue.Insert(0, character);
+                    TurnQueue.Add(character);
                 else
                     TurnQueue.Insert(indexToInsert, character);
             }

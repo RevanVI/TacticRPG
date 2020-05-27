@@ -52,8 +52,8 @@ MonoBehaviour:
     Level: 5
     Icon: {fileID: 21300000, guid: d753efc53efa8674d99e32b3d11a1b95, type: 3}
     IconColor: {r: 1, g: 1, b: 1, a: 1}
-    Health: 10
-    CurrentHealth: 10
+    Health: 12
+    CurrentHealth: 12
     Speed: 4
     RangedDamage: 4
     MeleeDamage: 2
