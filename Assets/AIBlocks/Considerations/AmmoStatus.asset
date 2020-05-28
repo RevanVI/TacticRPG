@@ -12,4 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ac2e07e4fc0c17e4498be7e36da3fb31, type: 3}
   m_Name: AmmoStatus
   m_EditorClassIdentifier: 
-  Name: 
+  Name: AmmoStatus
