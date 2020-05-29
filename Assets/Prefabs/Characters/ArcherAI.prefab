@@ -151,7 +151,7 @@ MonoBehaviour:
     IconColor: {r: 1, g: 0.68235296, b: 0.68235296, a: 1}
     Health: 12
     CurrentHealth: 12
-    Speed: 4
+    Speed: 3
     RangedDamage: 4
     MeleeDamage: 2
     MaxMissiles: 10

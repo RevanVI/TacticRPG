@@ -88,6 +88,7 @@ public class DecisionMaker: ScriptableObject
                 {
                     Decision decision = new Decision();
                     decision.Context = context.Copy();
+                    decision.Context.Target = user;
                     decision.Context.Data.Add("SkillNo", Qualifiers[i].SkillNo);
                     decision.QualifierRef = Qualifiers[i];
                     PossibleDecisions.Add(decision);

@@ -77,6 +77,7 @@ public class Character : MonoBehaviour
         _rb2d = GetComponent<Rigidbody2D>();
         _collider = GetComponent<BoxCollider2D>();
         _spriteRenderer = GetComponent<SpriteRenderer>();
+        ActiveEffects = new List<Effect>();
 
         _spriteRenderer.color = Properties.IconColor;
         OnDamageTaken = new UnityIntEvent();
